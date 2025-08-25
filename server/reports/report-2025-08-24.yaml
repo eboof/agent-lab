@@ -1,0 +1,56 @@
+generatedAt: '2025-08-24T21:38:40.749Z'
+summary:
+  - Daily automated stock report.
+  - U.S. tickers include Tesla, Nvidia, Palantir, Alibaba.
+  - ASX tickers include CDA.AX, NCK.AX, FMG.AX, VAS.AX.
+  - Generated automatically at midnight AEST.
+us:
+  - ticker: TSLA
+    price: 340.01
+    changePercent: 6.21662
+    volume: 94016347
+    marketState: CLOSED
+    time: '2025-08-22T20:00:00.000Z'
+  - ticker: NVDA
+    price: 177.99
+    changePercent: 1.7202
+    volume: 172789427
+    marketState: CLOSED
+    time: '2025-08-22T20:00:00.000Z'
+  - ticker: PLTR
+    price: 158.74
+    changePercent: 1.63914
+    volume: 102099177
+    marketState: CLOSED
+    time: '2025-08-22T20:00:01.000Z'
+  - ticker: BABA
+    price: 122.94
+    changePercent: 4.10704
+    volume: 12784784
+    marketState: CLOSED
+    time: '2025-08-22T20:00:02.000Z'
+asx:
+  - ticker: CDA.AX
+    price: 28.34
+    changePercent: 8.167936
+    volume: 908051
+    marketState: PRE
+    time: '2025-08-22T06:15:23.000Z'
+  - ticker: NCK.AX
+    price: 23.51
+    changePercent: 0.085144565
+    volume: 284689
+    marketState: PRE
+    time: '2025-08-22T06:13:27.000Z'
+  - ticker: FMG.AX
+    price: 19.5
+    changePercent: -1.0654444
+    volume: 7924703
+    marketState: PRE
+    time: '2025-08-22T06:18:12.000Z'
+  - ticker: VAS.AX
+    price: 111.36
+    changePercent: -0.50035524
+    volume: 177352
+    marketState: PRE
+    time: '2025-08-22T06:10:06.000Z'

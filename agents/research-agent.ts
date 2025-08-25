@@ -1,186 +1,74 @@
 #!/usr/bin/env ts-node
 
-import Anthropic from '@anthropic-ai/sdk';
-import { config } from 'dotenv';
-import { writeFileSync, existsSync, mkdirSync } from 'fs';
-import { join, dirname } from 'path';
+import Anthropic from "@anthropic-ai/sdk";
+import yaml from "js-yaml";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+import { config } from "dotenv";
 
 config();
 
-interface ResearchConfig {
-  model: string;
-  maxTokens: number;
-  outputPath: string;
-  previewLength: number;
-}
+// ✅ Fix __dirname in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
-interface CLIArgs {
-  query?: string;
-  output?: string;
-  model?: string;
-  help?: boolean;
-}
+// ✅ Load Anthropic client
+const anthropic = new Anthropic({
+  apiKey: process.env.ANTHROPIC_API_KEY,
+});
 
-class ResearchAgent {
-  private anthropic: Anthropic;
-  private config: ResearchConfig;
+export default async function run(args: string[]) {
+  const query = args.join(" ");
 
-  constructor(config: Partial<ResearchConfig> = {}) {
-    this.validateEnvironment();
-    
-    this.anthropic = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY!,
+  if (!query) {
+    return { error: "No research query provided" };
+  }
+
+  console.log(`🔍 Researching: ${query}`);
+
+  try {
+    const response = await anthropic.messages.create({
+      model: "claude-sonnet-4-20250514", // Latest Claude 4 Sonnet model
+      max_tokens: 1000,
+      messages: [
+        {
+          role: "user",
+          content: `Provide a structured research summary about "${query}" in clean YAML format with keys: summary, key_points, sources.`,
+        },
+      ],
     });
 
-    this.config = {
-      model: 'claude-3-5-sonnet-20241022',
-      maxTokens: 4000,
-      outputPath: 'research-output.txt',
-      previewLength: 200,
-      ...config
-    };
-  }
+    // Extract text from response
+    const text = response.content
+      .map((c: any) => (typeof c.text === "string" ? c.text : c))
+      .join("\n");
 
-  private validateEnvironment(): void {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new Error('ANTHROPIC_API_KEY not found in environment variables');
-    }
-  }
-
-  private parseArgs(): CLIArgs {
-    const args: CLIArgs = {};
-    
-    for (let i = 2; i < process.argv.length; i++) {
-      const arg = process.argv[i];
-      
-      if (arg === '--help' || arg === '-h') {
-        args.help = true;
-      } else if (arg === '--output' || arg === '-o') {
-        args.output = process.argv[++i];
-      } else if (arg === '--model' || arg === '-m') {
-        args.model = process.argv[++i];
-      } else if (!args.query) {
-        args.query = arg;
-      }
-    }
-    
-    return args;
-  }
-
-  private showHelp(): void {
-    console.log(`
-Research Agent - AI-powered research using Anthropic Claude
-
-Usage:
-  research-agent.ts <query> [options]
-
-Arguments:
-  query                 The research query to investigate
-
-Options:
-  -o, --output <path>   Output file path (default: research-output.txt)
-  -m, --model <model>   Claude model to use (default: claude-3-5-sonnet-20241022)
-  -h, --help           Show this help message
-
-Examples:
-  research-agent.ts "What are the benefits of microservices?"
-  research-agent.ts "Explain quantum computing" --output quantum-research.txt
-  research-agent.ts "AI trends 2024" --model claude-3-haiku-20240307
-
-Environment:
-  ANTHROPIC_API_KEY    Required: Your Anthropic API key
-`);
-  }
-
-  private async conductResearch(query: string): Promise<string> {
-    console.log(`🔍 Researching: ${query}`);
-    console.log(`📊 Using model: ${this.config.model}`);
-    
+    let parsed: any;
     try {
-      const response = await this.anthropic.messages.create({
-        model: this.config.model,
-        max_tokens: this.config.maxTokens,
-        messages: [{
-          role: 'user',
-          content: query
-        }]
-      });
-
-      const result = response.content[0];
-      
-      if (result.type !== 'text') {
-        throw new Error('Received non-text response from API');
-      }
-      
-      return result.text;
-    } catch (error) {
-      if (error instanceof Error) {
-        throw new Error(`API request failed: ${error.message}`);
-      }
-      throw new Error('Unknown API error occurred');
+      parsed = yaml.load(text);
+    } catch {
+      parsed = { error: "Failed to parse YAML", raw: text };
     }
-  }
 
-  private saveResult(content: string, outputPath: string): void {
-    const fullPath = join(process.cwd(), outputPath);
-    const dir = dirname(fullPath);
-    
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-    
-    writeFileSync(fullPath, content, 'utf-8');
-    console.log(`✅ Research saved to: ${fullPath}`);
-  }
-
-  private showPreview(content: string): void {
-    console.log('\n--- Result Preview ---');
-    const preview = content.length > this.config.previewLength 
-      ? content.substring(0, this.config.previewLength) + '...'
-      : content;
-    console.log(preview);
-    console.log(`\n📝 Total length: ${content.length} characters`);
-  }
-
-  async run(): Promise<void> {
-    try {
-      const args = this.parseArgs();
-      
-      if (args.help) {
-        this.showHelp();
-        return;
-      }
-
-      if (!args.query) {
-        console.error('❌ Error: Query is required');
-        this.showHelp();
-        process.exit(1);
-      }
-
-      if (args.model) {
-        this.config.model = args.model;
-      }
-
-      if (args.output) {
-        this.config.outputPath = args.output;
-      }
-
-      const result = await this.conductResearch(args.query);
-      this.saveResult(result, this.config.outputPath);
-      this.showPreview(result);
-      
-    } catch (error) {
-      console.error('❌ Error:', error instanceof Error ? error.message : 'Unknown error');
-      process.exit(1);
-    }
+    return parsed;
+  } catch (err: any) {
+    console.error("❌ Research agent failed:", err.message);
+    return { error: err.message };
   }
 }
 
-async function main(): Promise<void> {
-  const agent = new ResearchAgent();
-  await agent.run();
+// --- If run directly from CLI ---
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const query = process.argv.slice(2).join(" ");
+  if (!query) {
+    console.error("❌ No research query provided");
+    process.exit(1);
+  }
+  
+  run([query]).then((result) => {
+    console.log(yaml.dump(result));
+  }).catch((err) => {
+    console.error("❌ Research agent failed:", err.message);
+    process.exit(1);
+  });
 }
-
-if (require.main === module) {
-  main().catch(console.error);
-}% 

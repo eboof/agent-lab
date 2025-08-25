@@ -1,41 +1,38 @@
 #!/usr/bin/env ts-node
 
 import yahooFinance from "yahoo-finance2";
-import fs from "fs";
-import path from "path";
+import yaml from "js-yaml";
+import { fileURLToPath } from "url";
 
-// List of tickers
-const tickers = ["CDA.AX", "NCK.AX", "FMG.AX", "VAS.AX"];
-
-// Helper: format date YYYYMMDD
-function getDateString() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10).replace(/-/g, "");
-}
-
-async function main() {
+// --- Main logic ---
+export default async function runStock(args: string[]) {
+  const ticker = args[0];
   try {
-    const results: string[] = [];
-    const today = getDateString();
+    const quote = await yahooFinance.quote(ticker);
 
-    for (const ticker of tickers) {
-      const quote = await yahooFinance.quote(ticker);
-      results.push(
-        `${ticker}: close=${quote.regularMarketPrice}, change=${quote.regularMarketChangePercent?.toFixed(
-          2
-        )}%, volume=${quote.regularMarketVolume}`
-      );
-    }
+    const data = {
+      ticker,
+      price: quote.regularMarketPrice,
+      currency: quote.currency,
+      marketState: quote.marketState,
+    };
 
-    const fileName = `stocks${today}.txt`;
-    const filePath = path.join(process.cwd(), fileName);
-
-    fs.writeFileSync(filePath, results.join("\n"), "utf8");
-    console.log(`✅ Saved stock data to ${filePath}`);
-  } catch (err) {
-    console.error("❌ Error fetching stock data:", err);
+    return data;
+  } catch (err: any) {
+    console.error(`❌ Error fetching ${ticker}:`, err.message);
+    return { ticker, error: err.message };
   }
 }
 
-main();
+// --- If run directly from CLI ---
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  const ticker = process.argv[2];
+  if (!ticker) {
+    console.error("❌ Usage: stock-agent.ts <TICKER>");
+    process.exit(1);
+  }
+
+  runStock([ticker]).then((data) => {
+    console.log(yaml.dump(data));
+  });
 }
