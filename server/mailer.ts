@@ -8,8 +8,8 @@ const transporter = nodemailer.createTransport({
   port: 587, // STARTTLS
   secure: false, // must be false for port 587
   auth: {
-    user: process.env.SMTP_USER || "stocks@jalwax.com",
-    pass: process.env.SMTP_PASS || "TryThis$One", // ⚠️ move to .env for safety
+    user: process.env.SMTP_USER,
+    pass: process.env.SMTP_PASS,
   },
   tls: {
     rejectUnauthorized: false, // helps with some shared hosts
@@ -18,16 +18,20 @@ const transporter = nodemailer.createTransport({
 
 // Send mail function
 export async function sendMail(to: string, subject: string, html: string) {
+  if (!process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    throw new Error("SMTP credentials not configured. Set SMTP_USER and SMTP_PASS environment variables.");
+  }
+
   try {
     const info = await transporter.sendMail({
-      from: `"Stocks Bot" <stocks@jalwax.com>`,
+      from: `"Stocks Bot" <${process.env.SMTP_USER}>`,
       to,
       subject,
       html,
     });
 
     console.log("📧 Email successfully sent!");
-    console.log(`   → From: stocks@jalwax.com`);
+    console.log(`   → From: ${process.env.SMTP_USER}`);
     console.log(`   → To: ${to}`);
     console.log(`   → Subject: ${subject}`);
     console.log(`   → Message ID: ${info.messageId}`);
