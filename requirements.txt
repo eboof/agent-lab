@@ -1,0 +1,15 @@
+# Agent-Lab RAG System Requirements
+fastapi==0.104.1
+uvicorn==0.24.0
+langchain==0.2.16
+langchain-text-splitters==0.2.4
+langchain-openai==0.1.23
+langchain-community==0.2.16
+chromadb==0.4.24
+openai==1.51.0
+pydantic==2.8.2
+python-multipart==0.0.9
+transformers==4.45.2
+torch==2.4.1
+pypdf==4.3.1
+python-dotenv==1.0.1

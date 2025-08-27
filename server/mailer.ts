@@ -1,6 +1,12 @@
 import nodemailer from "nodemailer";
 import { config } from "dotenv";
-config();
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Load .env from project root regardless of where this is called from
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+config({ path: path.resolve(__dirname, "../.env") });
 
 // Create reusable transporter
 const transporter = nodemailer.createTransport({

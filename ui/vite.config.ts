@@ -8,6 +8,8 @@ export default defineConfig({
       "/agents": "http://localhost:3001",
       "/run": "http://localhost:3001",
       "/chat": "http://localhost:3001",
+      "/schedule": "http://localhost:3001",
+      "/run-now": "http://localhost:3001",
     },
   },
 });

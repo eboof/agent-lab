@@ -1,0 +1,81 @@
+# project-meta.yaml
+# Agent-Lab Project Metadata
+# Version ID: 20250826-0730
+# Maintained by ChatGPT system prompt
+
+project:
+  name: Agent-Lab
+  description: >
+    A sandbox environment for building, testing, and deploying AI agents
+    with support for research, tutoring, stock analysis, and scheduled reports.
+
+versioning:
+  codebase_version: v1.0
+  esm_status: "full-esm"        # All modules are ESM
+  last_migration: 20250825
+  current_system_prompt: 20250826-0730
+
+agents:
+  - name: stock-agent
+    status: active
+    export: default
+    last_tested: 20250824
+  - name: research-agent
+    status: active
+    export: default
+    last_tested: 20250824
+  - name: daily-report
+    status: active
+    export: default
+    last_tested: 20250825
+  - name: demo-agent
+    status: broken           # missing default export
+    note: fix or remove
+
+server:
+  framework: express
+  port: 3001
+  esm: true
+  cron:
+    enabled: true
+    schedule: "0 0 * * *"   # midnight AEST
+    job: daily-report
+    last_run: null
+    next_run: null
+  mailer:
+    provider: guardedhost
+    from: stocks@jalwax.com
+    env_vars: [SMTP_USER, SMTP_PASS]
+
+ui:
+  framework: react + vite + tailwind
+  tabs:
+    - Agents
+    - Chatbot
+    - Reports
+  reports_ui:
+    features:
+      - show_schedule
+      - run_now_button
+      - auto_refresh
+    status: integrated
+
+knowledge:
+  docs_folder: ./docs
+  vector_store: server/docs.json
+  pdf_loader: pdf-parse
+  tutor_agent: planned
+
+slm_experiments:
+  target_device: mac-mini-m4
+  ram: 64GB
+  planned_models:
+    - mobi-llama
+    - phi-3-mini
+    - mistral-small-3.1
+  backend: mlx
+
+security:
+  secrets_in_env: true
+  exposed_keys: rotated  # GitGuardian issue fixed 20250825
+  next_audit: 20250901
