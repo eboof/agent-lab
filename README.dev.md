@@ -1,26 +1,48 @@
-# Agent-Lab Developer Guide
+# Agent-Lab v4.0 - Unified AI Platform
+
+**Your AI Lego Set** - Combines agents, chatbot, and RAG functionality with local model support
 
 ## 🚀 Project Structure
 ```
 agent-lab/
-├── agents/         # Stock, research, daily-report, demo agents
-├── server/         # Express backend (index.ts, mailer.ts, vectorStore.ts, cron)
-├── ui/             # Vite + React frontend
-├── docs/           # Knowledge PDFs (blog posts, research papers, etc.)
-├── server/docs.db  # Vector store (SQLite or JSON depending on config)
-└── README.dev.md   # This file
+├── agents/                    # TypeScript agents (stock, research, daily-report)
+├── server/                    # Express backend + Python RAG integration
+│   ├── models/local/         # Local model support (GPT-2, DistilGPT-2)
+│   ├── rag/                  # RAG components (vectorstore, ingestion)
+│   ├── api.py                # Python RAG API server
+│   └── index.ts              # Main Node.js server (port 3001)
+├── ui/                       # Unified React frontend (3 tabs)
+│   ├── Agents Tab            # Run TypeScript agents
+│   ├── Chatbot Tab           # Chat with Claude/GPT-4o  
+│   └── RAG Chat Tab          # Query documents with local/cloud models
+├── docs/                     # Knowledge PDFs for RAG
+└── requirements.txt          # Python dependencies
 ```
 
 ---
 
-## 🔧 Setup
+## 🔧 Quick Start
 
-1. Install dependencies:
+### Option 1: Automated Setup
+```sh
+./start-agent-lab.sh
+```
+
+### Option 2: Manual Setup
+
+1. **Install Node.js dependencies:**
    ```sh
    pnpm install
+   cd server && pnpm install
+   cd ../ui && pnpm install
    ```
 
-2. Create `.env` in root:
+2. **Install Python dependencies (for RAG):**
+   ```sh
+   pip install -r requirements.txt
+   ```
+
+3. **Create `.env` in root:**
    ```ini
    ANTHROPIC_API_KEY=your_key_here
    OPENAI_API_KEY=your_key_here
@@ -30,30 +52,31 @@ agent-lab/
 
 ---
 
-## ▶️ Running the Server
-From repo root:
+## ▶️ Running the Unified System
+
+### Start All Services:
 ```sh
-cd server
-pnpm run dev
+./start-agent-lab.sh
 ```
 
-- Runs Express on `http://localhost:3001`
-- Agents live in `/agents`
-- Cron job runs `daily-report` at **midnight AEST**
-- Manual trigger: `POST /run-now/daily-report`
-
----
-
-## 🎨 Running the UI
-From repo root:
+### Manual Startup:
 ```sh
-cd ui
-pnpm dev
+# Terminal 1: Node.js server
+cd server && pnpm run dev
+
+# Terminal 2: React UI
+cd ui && pnpm dev
 ```
 
-- Dev server on `http://localhost:5173`
-- Tabs: **Agents**, **Chatbot**, **Reports**
-- Reports tab shows schedule + manual run button
+### Access Points:
+- **Main UI:** `http://localhost:5173`
+- **Agent Server:** `http://localhost:3001`
+- **RAG Server:** Starts on-demand via UI or `POST /rag/start`
+
+### UI Features:
+- **🤖 Agents Tab:** Run TypeScript agents (stock, daily-report, research)
+- **💬 Chatbot Tab:** Chat with Claude or GPT-4o
+- **🧠 RAG Chat Tab:** Query documents with local or cloud models
 
 ---
 

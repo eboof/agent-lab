@@ -1,35 +1,35 @@
-date: '2025-08-25T05:15:46.091Z'
+date: '2025-08-26T10:11:36.141Z'
 us:
   - ticker: TSLA
-    price: 340.01
+    price: 346.6
     currency: USD
-    marketState: PREPRE
+    marketState: PRE
   - ticker: NVDA
-    price: 177.99
+    price: 179.81
     currency: USD
-    marketState: PREPRE
+    marketState: PRE
   - ticker: PLTR
-    price: 158.74
+    price: 157.17
     currency: USD
-    marketState: PREPRE
+    marketState: PRE
   - ticker: BABA
-    price: 122.94
+    price: 124.35
     currency: USD
-    marketState: PREPRE
+    marketState: PRE
 asx:
   - ticker: CDA.AX
-    price: 29.5
+    price: 30.6
     currency: AUD
-    marketState: REGULAR
+    marketState: POSTPOST
   - ticker: NCK.AX
-    price: 23.76
+    price: 24
     currency: AUD
-    marketState: REGULAR
+    marketState: POSTPOST
   - ticker: FMG.AX
-    price: 20
+    price: 19.22
     currency: AUD
-    marketState: REGULAR
+    marketState: POSTPOST
   - ticker: VAS.AX
-    price: 111.52
+    price: 111.08
     currency: AUD
-    marketState: REGULAR
+    marketState: POSTPOST
