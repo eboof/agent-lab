@@ -55,11 +55,13 @@ async function fetch(url: string, options?: any) {
   });
 }
 
-config({ path: "../.env" });
-
 // --- Fix __dirname for ESM ---
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+
+// Load environment variables with proper path resolution
+const envPath = path.resolve(__dirname, "../.env");
+config({ path: envPath });
 
 // --- Initialize AI clients ---
 const anthropic = new Anthropic({
@@ -97,7 +99,12 @@ async function startRAGServer() {
   });
 
   ragProcess.stderr?.on("data", (data) => {
-    console.error(`❌ RAG Error: ${data.toString()}`);
+    const error = data.toString().trim();
+    console.error(`❌ RAG Error: ${error}`);
+    // If there's a Python import error, provide helpful info
+    if (error.includes("ModuleNotFoundError")) {
+      console.error("💡 Hint: RAG server requires Python dependencies. Install with: pip install fastapi langchain-community langchain-openai uvicorn");
+    }
   });
 
   ragProcess.on("close", (code) => {
@@ -113,6 +120,15 @@ async function startRAGServer() {
 
 // --- Express app ---
 const app = express();
+
+// Enable CORS for frontend access
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
+  next();
+});
+
 app.use(bodyParser.json());
 
 const PORT = 3001;
@@ -125,8 +141,15 @@ app.get("/agents", (req, res) => {
   try {
     const files = fs
       .readdirSync(agentsDir)
-      .filter((f) => f.endsWith(".ts"))
-      .map((f) => f.replace(".ts", ""));
+      .filter((f) => (f.endsWith(".ts") || f.endsWith(".agent.ts")) && !f.startsWith("__") && !f.startsWith("."))
+      .map((f) => {
+        // Handle both .agent.ts and .ts files
+        if (f.endsWith(".agent.ts")) {
+          return f.replace(/\.agent\.ts$/, "");
+        } else {
+          return f.replace(/\.ts$/, "");
+        }
+      });
 
     console.log(`📋 Listing agents: ${files.join(", ")}`);
     res.json(files);
@@ -147,10 +170,27 @@ app.post("/run", async (req, res) => {
   }
 
   try {
-    const mod = await import(`../agents/${agent}.ts`);
+    let mod;
+    let agentPath;
+    
+    // Try .agent.ts first, then .ts
+    try {
+      agentPath = `../agents/${agent}.agent.ts`;
+      mod = await import(agentPath);
+    } catch (firstError) {
+      try {
+        agentPath = `../agents/${agent}.ts`;
+        mod = await import(agentPath);
+      } catch (secondError) {
+        throw new Error(`Could not find agent '${agent}' (tried ${agent}.agent.ts and ${agent}.ts)`);
+      }
+    }
+    
     if (!mod.default) {
       throw new Error(`Agent '${agent}' has no default export`);
     }
+    
+    console.log(`🚀 Running agent '${agent}' from ${agentPath}`);
     const output = await mod.default(args);
 
     console.log(`✅ Agent '${agent}' finished successfully`);
@@ -245,10 +285,24 @@ app.post("/chat", async (req, res) => {
 //
 
 // GET /rag/status → check RAG server status
-app.get("/rag/status", (req, res) => {
+app.get("/rag/status", async (req, res) => {
+  let actualStatus = "stopped";
+  let actualReady = false;
+  
+  // Check if RAG server is actually responding
+  try {
+    const response = await fetch("http://127.0.0.1:8000/health");
+    if (response.ok) {
+      actualStatus = "running";
+      actualReady = true;
+    }
+  } catch (err) {
+    // RAG server not responding
+  }
+  
   res.json({ 
-    ready: ragReady, 
-    process: ragProcess ? "running" : "stopped",
+    ready: actualReady, 
+    process: actualStatus,
     port: 8000 
   });
 });
@@ -257,15 +311,31 @@ app.get("/rag/status", (req, res) => {
 app.post("/rag/start", async (req, res) => {
   try {
     await startRAGServer();
-    res.json({ message: "RAG server starting...", status: "starting" });
+    res.json({ 
+      success: true, 
+      message: "RAG server starting...", 
+      status: "starting" 
+    });
   } catch (err: any) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ 
+      success: false, 
+      error: err.message || "Failed to start RAG server" 
+    });
   }
 });
 
 // RAG proxy endpoints (forward to Python server)
 app.post("/rag/query", async (req, res) => {
-  if (!ragReady) {
+  // Check if RAG server is actually running
+  let isReady = false;
+  try {
+    const healthCheck = await fetch("http://127.0.0.1:8000/health");
+    isReady = healthCheck.ok;
+  } catch (err) {
+    // Server not available
+  }
+
+  if (!isReady) {
     return res.status(503).json({ 
       error: "RAG server not ready", 
       message: "Use POST /rag/start to start the RAG server" 
@@ -302,6 +372,236 @@ app.get("/rag/models", async (req, res) => {
     res.status(500).json({ error: "Failed to get models", message: err.message });
   }
 });
+
+//
+// POST /api/agents/create → generate new agent
+//
+app.post("/api/agents/create", async (req, res) => {
+  const { name, description, version, systemPrompt, selectedTools, inputSchema, outputSchema } = req.body;
+  
+  try {
+    // Validate required fields
+    if (!name || !description || !version) {
+      return res.status(400).json({ 
+        error: "Missing required fields", 
+        required: ["name", "description", "version"] 
+      });
+    }
+
+    // Import agent template system
+    const { createAgentTemplate } = await import("./agent-builder/agent-template.ts");
+    
+    // Convert UI format to agent config
+    const agentConfig = {
+      name,
+      description, 
+      version,
+      prompt: systemPrompt,
+      tools: selectedTools || [],
+      inputSchema: convertSchema(inputSchema || []),
+      outputSchema: convertSchema(outputSchema || []),
+      dependencies: [],
+      environmentVars: []
+    };
+
+    // Generate agent code
+    const agentCode = createAgentTemplate(agentConfig);
+    
+    // Create filename (sanitized)
+    const filename = name.toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .trim();
+    
+    const agentPath = path.join(__dirname, "../agents", `${filename}.agent.ts`);
+    
+    // Write agent file
+    fs.writeFileSync(agentPath, agentCode, 'utf-8');
+    
+    console.log(`✅ Generated agent: ${filename}.agent.ts`);
+    
+    res.json({ 
+      success: true, 
+      filename: `${filename}.agent.ts`,
+      path: agentPath,
+      message: "Agent generated successfully!"
+    });
+    
+  } catch (error: any) {
+    console.error("❌ Agent generation failed:", error);
+    res.status(500).json({ 
+      error: "Agent generation failed", 
+      message: error.message 
+    });
+  }
+});
+
+// Helper function to convert UI schema format to agent config format
+function convertSchema(schema: any[]) {
+  if (!schema || schema.length === 0) return {};
+  
+  return schema.reduce((acc: any, field: any) => {
+    acc[field.key] = {
+      type: field.type,
+      required: field.required,
+      description: field.description
+    };
+    return acc;
+  }, {});
+}
+
+//
+// GET /api/agents/list → list existing agent files
+//
+app.get("/api/agents/list", (req, res) => {
+  const agentsDir = path.resolve(__dirname, "../agents");
+  
+  try {
+    if (!fs.existsSync(agentsDir)) {
+      return res.json({ agents: [] });
+    }
+    
+    const files = fs.readdirSync(agentsDir)
+      .filter(file => file.endsWith('.agent.ts'))
+      .map(file => ({
+        filename: file,
+        name: file.replace('.agent.ts', ''),
+        path: path.join(agentsDir, file),
+        lastModified: fs.statSync(path.join(agentsDir, file)).mtime
+      }))
+      .sort((a, b) => b.lastModified.getTime() - a.lastModified.getTime());
+    
+    res.json({ agents: files });
+    
+  } catch (error: any) {
+    console.error("❌ Failed to list agents:", error);
+    res.status(500).json({ 
+      error: "Failed to list agents", 
+      message: error.message 
+    });
+  }
+});
+
+//
+// GET /api/agents/load/:filename → parse existing agent file
+//
+app.get("/api/agents/load/:filename", (req, res) => {
+  const { filename } = req.params;
+  const agentsDir = path.resolve(__dirname, "../agents");
+  const filePath = path.join(agentsDir, filename);
+  
+  try {
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: "Agent file not found" });
+    }
+    
+    const content = fs.readFileSync(filePath, 'utf-8');
+    const parsed = parseAgentFile(content);
+    
+    res.json({
+      filename,
+      content,
+      parsed,
+      lastModified: fs.statSync(filePath).mtime
+    });
+    
+  } catch (error: any) {
+    console.error(`❌ Failed to load agent ${filename}:`, error);
+    res.status(500).json({ 
+      error: "Failed to load agent", 
+      message: error.message 
+    });
+  }
+});
+
+// Helper function to parse agent file content back to UI format
+function parseAgentFile(content: string) {
+  try {
+    // Extract basic info from constructor
+    const nameMatch = content.match(/name:\s*["']([^"']+)["']/);
+    const descMatch = content.match(/description:\s*["']([^"']+)["']/);
+    const versionMatch = content.match(/version:\s*["']([^"']+)["']/);
+    const promptMatch = content.match(/systemPrompt:\s*`([^`]+)`|systemPrompt:\s*["']([^"']+)["']/);
+    
+    // Extract tools array
+    const toolsMatch = content.match(/tools:\s*(\[[^\]]+\])/);
+    let tools = [];
+    if (toolsMatch) {
+      try {
+        tools = JSON.parse(toolsMatch[1]);
+      } catch (e) {
+        console.warn("Could not parse tools:", e);
+      }
+    }
+    
+    // Extract schemas with improved multi-line JSON parsing
+    const inputSchema = extractSchema(content, 'inputSchema');
+    const outputSchema = extractSchema(content, 'outputSchema');
+    
+    return {
+      name: nameMatch ? nameMatch[1] : '',
+      description: descMatch ? descMatch[1] : '',
+      version: versionMatch ? versionMatch[1] : '0.1',
+      systemPrompt: promptMatch ? (promptMatch[1] || promptMatch[2]) : '',
+      selectedTools: tools,
+      inputSchema,
+      outputSchema
+    };
+    
+  } catch (error) {
+    console.error("Parse error:", error);
+    return null;
+  }
+}
+
+// Helper function to extract schema from agent file with robust JSON parsing
+function extractSchema(content: string, schemaName: string): any[] {
+  try {
+    // Find the schema property in the constructor
+    const schemaPattern = new RegExp(`${schemaName}:\\s*\\{`, 'g');
+    const match = schemaPattern.exec(content);
+    
+    if (!match) {
+      return [];
+    }
+    
+    // Find the start position after the opening brace
+    let startPos = match.index + match[0].length - 1; // Include the opening brace
+    let braceCount = 0;
+    let endPos = startPos;
+    
+    // Parse character by character to find the matching closing brace
+    for (let i = startPos; i < content.length; i++) {
+      const char = content[i];
+      if (char === '{') {
+        braceCount++;
+      } else if (char === '}') {
+        braceCount--;
+        if (braceCount === 0) {
+          endPos = i + 1;
+          break;
+        }
+      }
+    }
+    
+    // Extract and parse the JSON
+    const jsonStr = content.substring(startPos, endPos);
+    const parsed = JSON.parse(jsonStr);
+    
+    // Convert to UI format
+    return Object.entries(parsed).map(([key, value]: [string, any]) => ({
+      key,
+      type: value.type || 'string',
+      required: value.required || false,
+      description: value.description || ''
+    }));
+    
+  } catch (error) {
+    console.warn(`Could not parse ${schemaName}:`, error);
+    return [];
+  }
+}
 
 //
 // NEW: GET /meta → show project-meta.yaml

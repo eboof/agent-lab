@@ -1,0 +1,649 @@
+(node:39317) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+===================================
+✅ Agent server running on http://localhost:3001
+📂 Agents directory: /Users/rob/dev/agent-lab/agents
+===================================
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, working-stock-bot
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'ls -la' }
+[System Explorer] Starting system exploration with input: { command: 'ls -la' }
+[System Explorer] Executed: ls -la ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -la' ],
+  results: [
+    {
+      command: 'ls -la',
+      success: true,
+      output: 'total 224\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff   2204 29 Aug 09:42 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:42.359Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -la' ],
+  results: [
+    {
+      command: 'ls -la',
+      success: true,
+      output: 'total 224\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff   2204 29 Aug 09:42 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:42.359Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'explore directory' }
+[System Explorer] Starting system exploration with input: { command: 'explore directory' }
+[System Explorer] Executed: explore directory ❌
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'explore directory' ],
+  results: [
+    {
+      command: 'explore directory',
+      success: false,
+      output: '',
+      error: '/bin/sh: explore: command not found\n',
+      exitCode: 127,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 5
+    }
+  ],
+  summary: 'Executed 1 commands, 0 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:49.589Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'explore directory' ],
+  results: [
+    {
+      command: 'explore directory',
+      success: false,
+      output: '',
+      error: '/bin/sh: explore: command not found\n',
+      exitCode: 127,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 5
+    }
+  ],
+  summary: 'Executed 1 commands, 0 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:49.589Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'task:explore directory' }
+[System Explorer] Starting system exploration with input: { command: 'task:explore directory' }
+[System Explorer] Executed: task:explore directory ❌
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'task:explore directory' ],
+  results: [
+    {
+      command: 'task:explore directory',
+      success: false,
+      output: '',
+      error: '/bin/sh: task:explore: command not found\n',
+      exitCode: 127,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 4
+    }
+  ],
+  summary: 'Executed 1 commands, 0 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:55.981Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'task:explore directory' ],
+  results: [
+    {
+      command: 'task:explore directory',
+      success: false,
+      output: '',
+      error: '/bin/sh: task:explore: command not found\n',
+      exitCode: 127,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 4
+    }
+  ],
+  summary: 'Executed 1 commands, 0 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:42:55.981Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'pwd' }
+[System Explorer] Starting system exploration with input: { command: 'pwd' }
+[System Explorer] Executed: pwd ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 4
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:43:02.778Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 4
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:43:02.778Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'curl -s https://api.github.com/zen' }
+[System Explorer] Starting system exploration with input: { command: 'curl -s https://api.github.com/zen' }
+[System Explorer] Executed: curl -s https://api.github.com/zen ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'curl -s https://api.github.com/zen' ],
+  results: [
+    {
+      command: 'curl -s https://api.github.com/zen',
+      success: true,
+      output: 'Favor focus over features.',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 356
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:43:09.970Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'curl -s https://api.github.com/zen' ],
+  results: [
+    {
+      command: 'curl -s https://api.github.com/zen',
+      success: true,
+      output: 'Favor focus over features.',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 356
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-28T23:43:09.970Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+🤖 Hello! I am Demo Agent.
+I could fetch stock prices, send an email, or do research.
+❌ Error running agent 'demo-agent': Agent 'demo-agent' has no default export
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'pwd' }
+[System Explorer] Starting system exploration with input: { command: 'pwd' }
+[System Explorer] Executed: pwd ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:30:28.444Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:30:28.444Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'ls -al' }
+[System Explorer] Starting system exploration with input: { command: 'ls -al' }
+[System Explorer] Executed: ls -al ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -al' ],
+  results: [
+    {
+      command: 'ls -al',
+      success: true,
+      output: 'total 256\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff  16460 29 Aug 10:31 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 19
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:31:30.391Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -al' ],
+  results: [
+    {
+      command: 'ls -al',
+      success: true,
+      output: 'total 256\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff  16460 29 Aug 10:31 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 19
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:31:30.391Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'pwd' }
+[System Explorer] Starting system exploration with input: { command: 'pwd' }
+[System Explorer] Executed: pwd ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 10
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:41:17.656Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 10
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:41:17.656Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'ls -al' }
+[System Explorer] Starting system exploration with input: { command: 'ls -al' }
+[System Explorer] Executed: ls -al ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -al' ],
+  results: [
+    {
+      command: 'ls -al',
+      success: true,
+      output: 'total 264\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff  24387 29 Aug 10:41 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 26
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:41:39.676Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'ls -al' ],
+  results: [
+    {
+      command: 'ls -al',
+      success: true,
+      output: 'total 264\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:16 .\n' +
+        'drwxr-xr-x  39 rob  staff   1248 27 Aug 14:57 ..\n' +
+        'drwxr-xr-x@  3 rob  staff     96 26 Aug 20:13 .claude\n' +
+        '-rw-r--r--@  1 rob  staff   8196 27 Aug 09:18 .DS_Store\n' +
+        '-rw-r--r--@  1 rob  staff    356 26 Aug 20:04 .env\n' +
+        'drwxr-xr-x@ 14 rob  staff    448 29 Aug 08:35 .git\n' +
+        '-rw-r--r--   1 rob  staff     23 24 Aug 12:38 .gitignore\n' +
+        'drwxr-xr-x  17 rob  staff    544 29 Aug 09:42 agents\n' +
+        '-rw-r--r--@  1 rob  staff   1406 26 Aug 13:14 CLAUDE.md\n' +
+        'drwxr-xr-x@  3 rob  staff     96 29 Aug 09:42 cli\n' +
+        '-rw-r--r--@  1 rob  staff   3075 28 Aug 20:08 CLI.md\n' +
+        '-rwxr-xr-x   1 rob  staff   1121 27 Aug 07:19 copy_rag_data.sh\n' +
+        '-rw-r--r--@  1 rob  staff    657 28 Aug 21:17 daily-report.yaml\n' +
+        'drwxr-xr-x  31 rob  staff    992 25 Aug 21:34 docs\n' +
+        '-rwxr-xr-x   1 rob  staff    433 25 Aug 23:15 git-sync.sh\n' +
+        '-rw-r--r--@  1 rob  staff  24387 29 Aug 10:41 main-server.log\n' +
+        'drwxr-xr-x@ 17 rob  staff    544 25 Aug 21:26 node_modules\n' +
+        '-rw-r--r--@  1 rob  staff    843 28 Aug 20:07 package.json\n' +
+        '-rw-r--r--@  1 rob  staff  29179 25 Aug 06:34 pnpm-lock.yaml\n' +
+        '-rw-r--r--   1 rob  staff   1719 27 Aug 06:13 project-meta.yaml\n' +
+        '-rw-r--r--@  1 rob  staff   2712 28 Aug 08:09 README.dev.md\n' +
+        '-rw-r--r--@  1 rob  staff    311 28 Aug 08:06 requirements.txt\n' +
+        '-rw-r--r--@  1 rob  staff   1588 24 Aug 16:34 research-output.yaml\n' +
+        'drwxr-xr-x  30 rob  staff    960 29 Aug 09:34 server\n' +
+        '-rwxr-xr-x@  1 rob  staff   1609 28 Aug 08:34 start-agent-lab.sh\n' +
+        '-rw-r--r--@  1 rob  staff     95 25 Aug 05:33 stock-output.yaml\n' +
+        'drwxr-xr-x@  3 rob  staff     96 25 Aug 21:38 test\n' +
+        '-rw-r--r--@  1 rob  staff   3007 28 Aug 08:31 TROUBLESHOOTING.md\n' +
+        '-rw-r--r--@  1 rob  staff    474 25 Aug 11:36 tsconfig.json\n' +
+        'drwxr-xr-x  18 rob  staff    576 28 Aug 20:47 ui\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 26
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T00:41:39.676Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+📋 Listing agents: cli-test-bot, daily-report, demo-agent, myagent, myfirstagent, newstockagent, perfect-stock-bot, registry, research-agent, stock-agent, super-stock-bot, system-explorer, working-stock-bot
+🚀 Running agent 'system-explorer' from ../agents/system-explorer.agent.ts
+🤖 Running System Explorer...
+📝 Description: Explores file system and runs shell commands safely
+🔧 Tools: cli-tool
+📥 Input: { command: 'pwd' }
+[System Explorer] Starting system exploration with input: { command: 'pwd' }
+[System Explorer] Executed: pwd ✅
+[System Explorer] System exploration completed successfully: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T01:14:08.633Z',
+  agent: 'System Explorer'
+}
+📤 Output: {
+  task_completed: 'Executed 1 shell commands',
+  commands_executed: [ 'pwd' ],
+  results: [
+    {
+      command: 'pwd',
+      success: true,
+      output: '/Users/rob/dev/agent-lab\n',
+      error: '',
+      exitCode: 0,
+      workingDirectory: '/Users/rob/dev/agent-lab',
+      executionTime: 9
+    }
+  ],
+  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab',
+  timestamp: '2025-08-29T01:14:08.633Z',
+  agent: 'System Explorer'
+}
+✅ Agent 'system-explorer' finished successfully

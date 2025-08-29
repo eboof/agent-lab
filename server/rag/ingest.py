@@ -16,9 +16,9 @@ from langchain.embeddings.openai import OpenAIEmbeddings
 # Load env vars
 load_dotenv()
 
-DATA_DIR = "data"
+DATA_DIR = "../../docs"  # Point to the actual docs directory
 PROCESSED_DIR = "processed"
-DB_DIR = "db"
+DB_DIR = "../db"  # Point to the main server db directory
 LOG_FILE = "ingest.log"
 
 # Configure logging

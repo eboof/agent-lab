@@ -28,17 +28,20 @@ if [ ! -d "ui/node_modules" ]; then
     cd ui && pnpm install && cd ..
 fi
 
+# Get absolute path to project root
+PROJECT_ROOT=$(pwd)
+
 # Start servers in background
 echo ""
 echo "🚀 Starting Agent-Lab Server (port 3001)..."
-cd server && pnpm run dev &
+cd "$PROJECT_ROOT/server" && pnpm run dev &
 SERVER_PID=$!
-cd ..
 
 echo "🎨 Starting UI Dev Server (port 5173)..."
-cd ui && pnpm dev &
+cd "$PROJECT_ROOT/ui" && pnpm dev &
 UI_PID=$!
-cd ..
+
+cd "$PROJECT_ROOT"
 
 echo ""
 echo "✅ Agent-Lab is starting up!"

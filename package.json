@@ -5,7 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "agent-cli": "npx ts-node cli/agent-cli.ts",
+    "build-agent": "npx ts-node cli/agent-cli.ts"
   },
   "keywords": [],
   "author": "",
