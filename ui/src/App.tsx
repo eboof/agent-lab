@@ -47,9 +47,40 @@ const AgentBuilder = () => {
   const [saveStatus, setSaveStatus] = useState<{type: string, message: string} | null>(null);
   const [existingAgents, setExistingAgents] = useState<any[]>([]);
   const [loadMenuOpen, setLoadMenuOpen] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<string>('');
 
   const updateForm = (field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  // Generate code template
+  const generatedCode = `
+import { BaseAgent } from "../../server/agent-builder/agent.ts";
+
+export class ${form.name.replace(/\\s+/g, "")}Agent extends BaseAgent {
+  constructor() {
+    super({
+      name: "${form.name}",
+      description: "${form.description}",
+      version: "${form.version}",
+      systemPrompt: \`${form.systemPrompt}\`,
+      tools: ${formatToolsForCode(form.selectedTools)},
+      inputSchema: ${formatSchemaForCode(form.inputSchema)},
+      outputSchema: ${formatSchemaForCode(form.outputSchema)}
+    });
+  }
+}
+`;
+
+  const copyToClipboard = async () => {
+    try {
+      await navigator.clipboard.writeText(generatedCode);
+      setCopyStatus('✅ Copied!');
+      setTimeout(() => setCopyStatus(''), 2000);
+    } catch (error) {
+      setCopyStatus('❌ Failed to copy');
+      setTimeout(() => setCopyStatus(''), 2000);
+    }
   };
 
   const toggleTool = (toolId: string) => {
@@ -199,24 +230,6 @@ const AgentBuilder = () => {
       setLoading(false);
     }
   };
-
-  const generatedCode = `
-import { BaseAgent } from "../../server/agent-builder/agent.ts";
-
-export class ${form.name.replace(/\\s+/g, "")}Agent extends BaseAgent {
-  constructor() {
-    super({
-      name: "${form.name}",
-      description: "${form.description}",
-      version: "${form.version}",
-      systemPrompt: \`${form.systemPrompt}\`,
-      tools: ${formatToolsForCode(form.selectedTools)},
-      inputSchema: ${formatSchemaForCode(form.inputSchema)},
-      outputSchema: ${formatSchemaForCode(form.outputSchema)}
-    });
-  }
-}
-`;
 
   return (
     <div className="agent-builder-container">
@@ -507,7 +520,16 @@ export class ${form.name.replace(/\\s+/g, "")}Agent extends BaseAgent {
 
       {/* Right Side - Code Preview */}
       <div className="code-preview">
-        <h3 className="preview-header">Generated Code</h3>
+        <div className="preview-header-container">
+          <h3 className="preview-header">Generated Code</h3>
+          <button 
+            onClick={copyToClipboard}
+            className="copy-button"
+            title="Copy code to clipboard"
+          >
+            {copyStatus || '📋 Copy'}
+          </button>
+        </div>
         <div className="code-container">
           <pre className="code-content">{generatedCode}</pre>
         </div>
