@@ -1,25 +1,30 @@
 #!/bin/bash
-set -e
+# git-sync.sh – Always sync master branch
+
+set -e  # exit on error
+
+echo "🔄 Syncing repo: $(pwd)"
 
 # Ensure we’re in repo root
 cd "$(dirname "$0")"
 
-echo "🔄 Pulling latest changes..."
-git pull origin master
+# Always check out master
+git checkout master
 
-echo "➕ Adding changes..."
-git add .
+# Pull latest from GitHub
+git pull origin master --no-rebase
 
-echo "✍️ Commit message (press enter for auto timestamp): "
-read msg
-if [ -z "$msg" ]; then
-  msg="Update on $(date)"
+# Stage all changes (respects .gitignore)
+git add -A
+
+# Commit with timestamp if nothing staged manually
+if git diff --cached --quiet; then
+  echo "✅ Nothing new to commit."
+else
+  git commit -m "sync: update on $(date '+%Y-%m-%d %H:%M:%S %Z')"
 fi
 
-echo "💾 Committing..."
-git commit -m "$msg"
-
-echo "⬆️ Pushing to GitHub..."
+# Push master explicitly
 git push origin master
 
-echo "✅ Sync complete!"
+echo "🚀 Master branch synced successfully!"
