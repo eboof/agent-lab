@@ -1,108 +1,27 @@
-(node:16062) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(node:60291) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
 ✅ Loaded environment from /Users/rob/dev/agent-lab/.env
 ===================================
 ✅ Server running → http://localhost:3001
 📂 Agents dir: /Users/rob/dev/agent-lab/agents
 ===================================
+Failed to load tool from prompt-yaml.ts: Error: Cannot find package 'js-yaml' imported from /Users/rob/dev/agent-lab/tools/implementations/prompt-yaml.ts
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:267:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:854:18)
+    at defaultResolve (node:internal/modules/esm/resolve:984:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+    at ModuleLoader.#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
 🔧 Loaded 2 tools
 Please consider completing the survey at https://bit.ly/yahoo-finance-api-feedback if you haven't already; for more info see https://github.com/gadicc/node-yahoo-finance2/issues/764#issuecomment-2056623851.  This will only be shown once, but you can suppress this message in future with `yahooFinance.suppressNotices(['yahooSurvey'])`.
 Fetching crumb and cookies from https://finance.yahoo.com/quote/AAPL...
 We expected a redirect to guce.yahoo.com, but got https://finance.yahoo.com/quote/AAPL/
 We'll try to continue anyway - you can safely ignore this if the request succeeds
-Success. Cookie expires on Mon Aug 31 2026 04:29:27 GMT+1000 (Australian Eastern Standard Time)
+Success. Cookie expires on Tue Sep 01 2026 02:08:36 GMT+1000 (Australian Eastern Standard Time)
 fetch https://query1.finance.yahoo.com/v1/test/getcrumb
-New crumb: GXzASIjf6UV
-🤖 Running System Explorer...
-📝 Description: Explores file system and runs shell commands safely
-🔧 Tools: cli-tool
-📥 Input: {
-  command: `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`
-}
-[System Explorer] Starting system exploration with input: {
-  command: `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`
-}
-[System Explorer] Executed: # Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \   -H "Content-Type: application/json" \   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq ✅
-[System Explorer] System exploration completed successfully: {
-  task_completed: 'Executed 1 shell commands',
-  commands_executed: [
-    `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`
-  ],
-  results: [
-    {
-      command: `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`,
-      success: true,
-      output: '',
-      error: '',
-      exitCode: 0,
-      workingDirectory: '/Users/rob/dev/agent-lab/server',
-      executionTime: 12
-    }
-  ],
-  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab/server',
-  timestamp: '2025-08-30T21:43:25.369Z',
-  agent: 'System Explorer'
-}
-📤 Output: {
-  task_completed: 'Executed 1 shell commands',
-  commands_executed: [
-    `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`
-  ],
-  results: [
-    {
-      command: `# Is server up? curl -s http://localhost:3001/agents | jq  # List available tools curl -s http://localhost:3001/api/tools/list | jq '.[].id'  # Run Prompt→YAML Tool curl -s -X POST http://localhost:3001/api/tools/run/prompt-yaml \\   -H "Content-Type: application/json" \\   -d '{"prompt": "Make a grocery list with fruits and vegetables"}' | jq`,
-      success: true,
-      output: '',
-      error: '',
-      exitCode: 0,
-      workingDirectory: '/Users/rob/dev/agent-lab/server',
-      executionTime: 12
-    }
-  ],
-  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab/server',
-  timestamp: '2025-08-30T21:43:25.369Z',
-  agent: 'System Explorer'
-}
-🤖 Running System Explorer...
-📝 Description: Explores file system and runs shell commands safely
-🔧 Tools: cli-tool
-📥 Input: { command: 'pwd' }
-[System Explorer] Starting system exploration with input: { command: 'pwd' }
-[System Explorer] Executed: pwd ✅
-[System Explorer] System exploration completed successfully: {
-  task_completed: 'Executed 1 shell commands',
-  commands_executed: [ 'pwd' ],
-  results: [
-    {
-      command: 'pwd',
-      success: true,
-      output: '/Users/rob/dev/agent-lab/server\n',
-      error: '',
-      exitCode: 0,
-      workingDirectory: '/Users/rob/dev/agent-lab/server',
-      executionTime: 3
-    }
-  ],
-  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab/server',
-  timestamp: '2025-08-30T21:44:43.264Z',
-  agent: 'System Explorer'
-}
-📤 Output: {
-  task_completed: 'Executed 1 shell commands',
-  commands_executed: [ 'pwd' ],
-  results: [
-    {
-      command: 'pwd',
-      success: true,
-      output: '/Users/rob/dev/agent-lab/server\n',
-      error: '',
-      exitCode: 0,
-      workingDirectory: '/Users/rob/dev/agent-lab/server',
-      executionTime: 3
-    }
-  ],
-  summary: 'Executed 1 commands, 1 successful. Working directory: /Users/rob/dev/agent-lab/server',
-  timestamp: '2025-08-30T21:44:43.264Z',
-  agent: 'System Explorer'
-}
-RAG exited 0
+New crumb: CjXZXzq2092

@@ -135,6 +135,34 @@ export class RAGBridge {
     }
   }
 
+  async loadDocs(filePaths?: string[], sourceDir: string = "/Users/rob/dev/agent-lab/data/uploads") {
+    if (!this.isReady) {
+      throw new Error("RAG server is not ready. Call startRAGServer() first.");
+    }
+
+    try {
+      const requestBody = {
+        file_paths: filePaths || [],
+        source_dir: sourceDir
+      };
+
+      const response = await fetch(`http://127.0.0.1:${this.ragPort}/load-docs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        throw new Error(`Load docs failed: ${response.status} ${response.statusText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("❌ Load docs error:", error);
+      throw error;
+    }
+  }
+
   isServerReady(): boolean {
     return this.isReady;
   }

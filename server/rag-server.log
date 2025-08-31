@@ -1,26 +1,12 @@
-INFO:     Started server process [16060]
+INFO:     Started server process [58316]
 INFO:     Waiting for application startup.
 INFO:     Application startup complete.
 INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
-INFO:     127.0.0.1:63516 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63516 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63560 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63560 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63618 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63618 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63675 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:63675 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50039 - "GET /models HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50039 - "GET /models HTTP/1.1" 200 OK
-/Users/rob/dev/agent-lab/server/api.py:57: LangChainDeprecationWarning: The class `Chroma` was deprecated in LangChain 0.2.9 and will be removed in 1.0. An updated version of the class exists in the :class:`~langchain-chroma package and should be used instead. To use it run `pip install -U :class:`~langchain-chroma` and import as `from :class:`~langchain_chroma import Chroma``.
-  db = Chroma(persist_directory=db_path, embedding_function=embeddings)
-Device set to use mps:0
-✅ Vector database loaded from /Users/rob/dev/agent-lab/server/db
-INFO:     127.0.0.1:50043 - "POST /query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50059 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50059 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50181 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50181 - "GET /models HTTP/1.1" 200 OK
-INFO:     127.0.0.1:50181 - "POST /query HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51348 - "GET /health HTTP/1.1" 200 OK
-INFO:     127.0.0.1:51348 - "GET /health HTTP/1.1" 200 OK
+✅ Loaded environment from /Users/rob/dev/agent-lab/.env
+INFO:     127.0.0.1:52646 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53955 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:53955 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54329 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54329 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54429 - "GET /health HTTP/1.1" 200 OK
+INFO:     127.0.0.1:54429 - "GET /health HTTP/1.1" 200 OK

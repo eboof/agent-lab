@@ -908,6 +908,8 @@ function RAGUI() {
   const [loading, setLoading] = useState(false);
   const [selectedModel, setSelectedModel] = useState("gpt-4o-mini");
   const [models, setModels] = useState<ModelOption[]>([]);
+  const [uploadStatus, setUploadStatus] = useState<{type: string, message: string} | null>(null);
+  const [uploading, setUploading] = useState(false);
   
   // Default model options (fallback if RAG server isn't running)
   const defaultModels: ModelOption[] = [
@@ -942,6 +944,118 @@ function RAGUI() {
         setModels(defaultModels);
       });
   }, []);
+
+  async function handleFileUpload(event: React.ChangeEvent<HTMLInputElement>) {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    setUploadStatus(null);
+
+    try {
+      // Create FormData and upload files
+      const formData = new FormData();
+      Array.from(files).forEach(file => {
+        formData.append('files', file);
+      });
+
+      // Step 1: Upload files to server first
+      const uploadResponse = await fetch('http://localhost:3001/rag/upload-files', {
+        method: 'POST',
+        body: formData
+      });
+
+      const uploadResult = await uploadResponse.json();
+
+      if (!uploadResponse.ok) {
+        throw new Error(uploadResult.detail || 'File upload failed');
+      }
+
+      // Step 2: Process the uploaded files
+      const response = await fetch('http://localhost:3001/rag/load-docs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          file_paths: uploadResult.file_paths,
+          source_dir: '/Users/rob/dev/agent-lab/data/uploads'
+        })
+      });
+
+      const result = await response.json();
+      
+      if (response.ok) {
+        setUploadStatus({
+          type: 'success', 
+          message: `✅ ${result.message}`
+        });
+      } else {
+        setUploadStatus({
+          type: 'error',
+          message: `❌ Processing failed: ${result.error || result.detail || 'Unknown error'}`
+        });
+      }
+    } catch (error: any) {
+      setUploadStatus({
+        type: 'error',
+        message: `❌ Upload error: ${error.message}`
+      });
+    } finally {
+      setUploading(false);
+      // Clear file input
+      event.target.value = '';
+      // Clear status after 5 seconds
+      setTimeout(() => setUploadStatus(null), 5000);
+    }
+  }
+
+  async function handleProcessDocs() {
+    setUploading(true);
+    setUploadStatus(null);
+    try {
+      // Process all files in uploads directory
+      const response = await fetch('http://localhost:3001/rag/load-docs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          file_paths: [],
+          source_dir: '/Users/rob/dev/agent-lab/data/uploads'
+        })
+      });
+
+      const result = await response.json();
+
+      if (response.ok) {
+        if (result.documents_processed === 0) {
+          setUploadStatus({
+            type: 'info',
+            message: '📁 No files in uploads folder. Use "Select Files" to choose documents.'
+          });
+        } else {
+          setUploadStatus({
+            type: 'success',
+            message: `✅ ${result.message}`
+          });
+        }
+      } else {
+        setUploadStatus({
+          type: 'error',
+          message: `❌ Processing failed: ${result.error || result.detail || 'Unknown error'}`
+        });
+      }
+    } catch (error: any) {
+      setUploadStatus({
+        type: 'error',
+        message: `❌ Processing error: ${error.message}`
+      });
+    } finally {
+      setUploading(false);
+      setTimeout(() => setUploadStatus(null), 5000);
+    }
+  }
 
   async function sendMessage() {
     if (!input.trim() || loading) return;
@@ -1044,6 +1158,37 @@ function RAGUI() {
             </div>
           </div>
         )}
+
+        {/* Document Upload Section */}
+        <div className="upload-section">
+          <div className="upload-controls">
+            <button 
+              onClick={handleProcessDocs}
+              disabled={uploading}
+              className="process-docs-btn"
+            >
+              {uploading ? "⏳ Processing..." : "📚 Process Documents"}
+            </button>
+            <label className="upload-btn">
+              <input
+                type="file"
+                multiple
+                accept=".pdf,.txt,.md"
+                onChange={handleFileUpload}
+                disabled={uploading}
+                style={{ display: 'none' }}
+              />
+              📁 Select Files
+            </label>
+            <span className="upload-info">Process all files in uploads/ or select specific files</span>
+          </div>
+          
+          {uploadStatus && (
+            <div className={`upload-status ${uploadStatus.type}`}>
+              {uploadStatus.message}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Chat Messages */}

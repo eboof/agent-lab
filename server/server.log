@@ -1,0 +1,43 @@
+
+> agent-server@1.0.0 dev
+> ts-node index.ts
+
+(node:40206) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✅ Loaded environment from /Users/rob/dev/agent-lab/.env
+===================================
+✅ Server running → http://localhost:3001
+📂 Agents dir: /Users/rob/dev/agent-lab/agents
+===================================
+Failed to load tool from prompt-yaml.ts: Error: Cannot find package 'js-yaml' imported from /Users/rob/dev/agent-lab/tools/implementations/prompt-yaml.ts
+    at Object.getPackageJSONURL (node:internal/modules/package_json_reader:267:9)
+    at packageResolve (node:internal/modules/esm/resolve:768:81)
+    at moduleResolve (node:internal/modules/esm/resolve:854:18)
+    at defaultResolve (node:internal/modules/esm/resolve:984:11)
+    at ModuleLoader.defaultResolve (node:internal/modules/esm/loader:780:12)
+    at ModuleLoader.#cachedDefaultResolve (node:internal/modules/esm/loader:704:25)
+    at ModuleLoader.resolve (node:internal/modules/esm/loader:687:38)
+    at ModuleLoader.getModuleJobForImport (node:internal/modules/esm/loader:305:38)
+    at ModuleJob._link (node:internal/modules/esm/module_job:137:49) {
+  code: 'ERR_MODULE_NOT_FOUND'
+}
+🔧 Loaded 1 tools
+Please consider completing the survey at https://bit.ly/yahoo-finance-api-feedback if you haven't already; for more info see https://github.com/gadicc/node-yahoo-finance2/issues/764#issuecomment-2056623851.  This will only be shown once, but you can suppress this message in future with `yahooFinance.suppressNotices(['yahooSurvey'])`.
+Fetching crumb and cookies from https://finance.yahoo.com/quote/AAPL...
+We expected a redirect to guce.yahoo.com, but got https://finance.yahoo.com/quote/AAPL/
+We'll try to continue anyway - you can safely ignore this if the request succeeds
+Success. Cookie expires on Mon Aug 31 2026 19:59:08 GMT+1000 (Australian Eastern Standard Time)
+fetch https://query1.finance.yahoo.com/v1/test/getcrumb
+New crumb: t5rO6XY0dXY
+🤖 Running Stock Agent...
+📝 Description: Get real-time stock prices and market data
+🔧 Tools: yahoo-finance
+📥 Input: { ticker: 'TSLA' }
+[Stock Agent] Stock agent starting with ticker: TSLA
+[Stock Agent] Running tool: yahoo-finance with params: { symbol: 'TSLA' }
+[Stock Agent] Error getting stock data: Tool execution not implemented for yahoo-finance
+📤 Output: {
+  ticker: 'TSLA',
+  error: 'Tool execution not implemented for yahoo-finance',
+  timestamp: '2025-08-31T03:59:44.781Z'
+}

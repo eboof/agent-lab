@@ -91,16 +91,16 @@ function generateExecuteLogic(config: AgentConfig): { imports: string; logic: st
   
   // Add imports for selected tools
   if (hasFinanceAPI) {
-    imports += `import { YahooFinanceTool } from "../server/tools/implementations/yahoo-finance-tool.ts";\n`;
+    imports += `import { YahooFinanceTool } from "../../tools/implementations/yahoo-finance.ts";\n`;
   }
   if (hasOpenAI) {
-    imports += `import { OpenAITool } from "../server/tools/implementations/openai-tool.ts";\n`;
+    imports += `import { OpenAITool } from "../../tools/implementations/openai-tool.ts";\n`;
   }
   if (hasAnthropic) {
-    imports += `import { AnthropicTool } from "../server/tools/implementations/anthropic-tool.ts";\n`;
+    imports += `import { AnthropicTool } from "../../tools/implementations/anthropic-tool.ts";\n`;
   }
   if (hasCLI) {
-    imports += `import { CLITool } from "../server/tools/implementations/cli-tool.ts";\n`;
+    imports += `import { CLITool } from "../../tools/implementations/cli-tool.ts";\n`;
   }
   
   // Generate actual working logic

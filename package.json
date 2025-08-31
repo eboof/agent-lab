@@ -1,33 +1,27 @@
 {
-  "name": "agent-lab",
+  "name": "agent-server",
   "version": "1.0.0",
-  "description": "",
+  "private": true,
   "type": "module",
-  "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "agent-cli": "npx ts-node cli/agent-cli.ts",
-    "build-agent": "npx ts-node cli/agent-cli.ts"
+    "dev": "ts-node index.ts"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.15.0",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.60.0",
-    "body-parser": "^2.2.0",
-    "dotenv": "^17.2.1",
-    "express": "^5.1.0",
-    "js-yaml": "^4.1.0",
+    "body-parser": "^1.20.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
     "node-cron": "^4.2.1",
     "nodemailer": "^7.0.5",
+    "openai": "^5.15.0",
+    "pdf-parse": "^1.1.1",
+    "sqlite3": "^5.1.7",
     "yahoo-finance2": "^2.13.3"
   },
   "devDependencies": {
-    "@types/body-parser": "^1.19.6",
-    "@types/express": "^5.0.3",
-    "@types/js-yaml": "^4.0.9",
-    "@types/node": "^24.3.0",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.7",
+    "@types/sqlite3": "^5.1.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }

@@ -37,11 +37,12 @@ import * as fs from "fs";
 import cron from "node-cron";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
+import multer from "multer";
 import * as yaml from "js-yaml";
 import { spawn, ChildProcess } from "child_process";
 
 // Tools (unified auto-discovery)
-import { loadTools, getToolById, TOOL_LIBRARY } from "./tools/tool-library.ts";
+import { loadTools, getToolById, TOOL_LIBRARY } from "../tools/tool-library.ts";
 
 // --- Simple fetch polyfill ---
 async function fetch(url: string, options?: any) {
@@ -89,6 +90,13 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 // --- Express ---
 const app = express();
+
+// Configure multer for file uploads
+const upload = multer({
+  dest: '/Users/rob/dev/agent-lab/data/uploads/',
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB limit
+});
+
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
   res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
@@ -107,6 +115,148 @@ app.use(bodyParser.json());
 // === Tools API ===
 //
 app.get("/api/tools/list", (req, res) => res.json(TOOL_LIBRARY));
+
+app.get("/api/tools/load/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const tool = getToolById(id);
+    
+    if (!tool) {
+      return res.status(404).json({ error: `Tool ${id} not found` });
+    }
+
+    // Find the tool file
+    const toolsDir = path.join(__dirname, "../tools/implementations");
+    const fileName = `${id}.ts`;
+    const filePath = path.join(toolsDir, fileName);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: `Tool file ${fileName} not found` });
+    }
+
+    // Read the source code
+    const sourceCode = fs.readFileSync(filePath, "utf-8");
+    
+    res.json({
+      id: tool.id,
+      name: tool.name,
+      description: tool.description,
+      icon: tool.icon,
+      category: tool.category,
+      sourceCode,
+      fileName,
+      lastModified: fs.statSync(filePath).mtime
+    });
+    
+  } catch (error: any) {
+    console.error("Tool load error:", error);
+    res.status(500).json({ error: `Failed to load tool: ${error.message}` });
+  }
+});
+
+app.post("/api/tools/create", async (req, res) => {
+  try {
+    const { id, name, description, icon, category, code } = req.body;
+    
+    if (!id || !name || !code) {
+      return res.status(400).json({ error: "Missing required fields: id, name, code" });
+    }
+
+    // Validate tool ID format
+    if (!/^[a-z0-9-]+$/.test(id)) {
+      return res.status(400).json({ error: "Tool ID must contain only lowercase letters, numbers, and hyphens" });
+    }
+
+    // Check if tool already exists
+    const existingTool = getToolById(id);
+    if (existingTool) {
+      return res.status(400).json({ error: `Tool with ID "${id}" already exists` });
+    }
+
+    // Create tool file
+    const toolsDir = path.join(__dirname, "../tools/implementations");
+    const fileName = `${id}.ts`;
+    const filePath = path.join(toolsDir, fileName);
+
+    // Generate tool code with proper imports
+    const toolCode = `// ${fileName}
+// Generated tool - ${new Date().toISOString()}
+
+import type { ToolDefinition } from "../tool-types.ts";
+
+${code}
+`;
+
+    // Write tool file
+    fs.writeFileSync(filePath, toolCode);
+
+    // Reload tools to include the new one
+    await loadTools();
+
+    res.json({ 
+      success: true, 
+      message: `Tool "${name}" created successfully`,
+      id,
+      file: fileName
+    });
+
+  } catch (error: any) {
+    console.error("Tool creation error:", error);
+    res.status(500).json({ error: `Failed to create tool: ${error.message}` });
+  }
+});
+
+app.put("/api/tools/update/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, description, icon, category, code } = req.body;
+    
+    if (!code) {
+      return res.status(400).json({ error: "Missing required field: code" });
+    }
+
+    // Check if tool exists
+    const existingTool = getToolById(id);
+    if (!existingTool) {
+      return res.status(404).json({ error: `Tool with ID "${id}" not found` });
+    }
+
+    // Update tool file
+    const toolsDir = path.join(__dirname, "../tools/implementations");
+    const fileName = `${id}.ts`;
+    const filePath = path.join(toolsDir, fileName);
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: `Tool file ${fileName} not found` });
+    }
+
+    // Generate updated tool code with proper imports
+    const toolCode = `// ${fileName}
+// Updated tool - ${new Date().toISOString()}
+
+import type { ToolDefinition } from "../tool-types.ts";
+
+${code}
+`;
+
+    // Write updated tool file
+    fs.writeFileSync(filePath, toolCode);
+
+    // Reload tools to reflect changes
+    await loadTools();
+
+    res.json({ 
+      success: true, 
+      message: `Tool "${name || existingTool.name}" updated successfully`,
+      id,
+      file: fileName
+    });
+
+  } catch (error: any) {
+    console.error("Tool update error:", error);
+    res.status(500).json({ error: `Failed to update tool: ${error.message}` });
+  }
+});
 
 app.post("/api/tools/run/:id", async (req, res) => {
   const { id } = req.params;
@@ -173,6 +323,50 @@ app.get("/rag/models", async (req, res) => {
       openai_models: ["gpt-4o-mini", "gpt-4o"],
       local_models: ["local-gpt2", "local-distilgpt2"],
     });
+  }
+});
+
+app.post("/rag/upload-files", upload.array('files'), async (req, res) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ error: "No files uploaded" });
+    }
+
+    // Rename files to preserve original names
+    const filePaths: string[] = [];
+    for (const file of files) {
+      const originalName = file.originalname;
+      const newPath = path.join('/Users/rob/dev/agent-lab/data/uploads', originalName);
+      
+      // Move file to correct location with original name
+      fs.renameSync(file.path, newPath);
+      filePaths.push(newPath);
+      console.log(`📤 Uploaded ${originalName} to ${newPath}`);
+    }
+
+    res.json({
+      status: "success",
+      message: `Uploaded ${filePaths.length} files`,
+      file_paths: filePaths
+    });
+  } catch (error: any) {
+    console.error("❌ Upload error:", error);
+    res.status(500).json({ error: `Failed to upload files: ${error.message}` });
+  }
+});
+
+app.post("/rag/load-docs", async (req, res) => {
+  try {
+    const r: any = await fetch("http://localhost:8000/load-docs", {
+      method: "POST", 
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(req.body),
+    });
+    const data = await r.json();
+    res.json(data);
+  } catch (e: any) {
+    res.status(500).json({ error: e.message });
   }
 });
 
