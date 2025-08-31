@@ -4,7 +4,7 @@
 import { BaseAgent } from "../server/agent-builder/agent.ts";
 import { CLITool } from "../server/tools/implementations/cli-tool.ts";
 
-export class SystemExplorerAgent extends BaseAgent {
+export default class SystemExplorerAgent extends BaseAgent {
   constructor() {
     super({
       name: "System Explorer",
@@ -163,8 +163,3 @@ export class SystemExplorerAgent extends BaseAgent {
   }
 }
 
-// Default export for Agent-Lab runner compatibility
-export default async function run(args: string[]) {
-  const agent = new SystemExplorerAgent();
-  return await agent.run(args);
-}

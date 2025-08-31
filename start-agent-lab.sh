@@ -1,62 +1,77 @@
 #!/bin/bash
-
-# Agent-Lab Unified Startup Script
-# Starts both the Node.js Agent server and optional Python RAG server
+# start-agent-lab.sh
+# Agent-Lab Unified Startup Script with auto-kill, logging, and RAG
 
 echo "🧪 Starting Agent-Lab - Your AI Lego Set"
 echo "========================================"
 
-# Check if we're in the right directory
+# Ensure we're in repo root
 if [ ! -f "package.json" ]; then
     echo "❌ Please run this script from the agent-lab root directory"
     exit 1
 fi
 
-# Install Node dependencies if needed
+# Kill old processes
+echo "🔪 Killing old Agent-Lab processes..."
+pkill -f "node.*server/index.ts" 2>/dev/null
+pkill -f "vite" 2>/dev/null
+pkill -f "uvicorn" 2>/dev/null
+sleep 2
+
+# Install dependencies if missing
 if [ ! -d "node_modules" ]; then
-    echo "📦 Installing Node.js dependencies..."
+    echo "📦 Installing root Node.js dependencies..."
     pnpm install
 fi
 
 if [ ! -d "server/node_modules" ]; then
     echo "📦 Installing server dependencies..."
-    cd server && pnpm install && cd ..
+    (cd server && pnpm install)
 fi
 
 if [ ! -d "ui/node_modules" ]; then
     echo "📦 Installing UI dependencies..."
-    cd ui && pnpm install && cd ..
+    (cd ui && pnpm install)
 fi
 
-# Get absolute path to project root
 PROJECT_ROOT=$(pwd)
 
-# Start servers in background
-echo ""
+# Start backend
 echo "🚀 Starting Agent-Lab Server (port 3001)..."
-cd "$PROJECT_ROOT/server" && pnpm run dev &
+cd "$PROJECT_ROOT/server"
+nohup pnpm ts-node index.ts > "$PROJECT_ROOT/main-server.log" 2>&1 &
 SERVER_PID=$!
 
+# Start frontend
 echo "🎨 Starting UI Dev Server (port 5173)..."
-cd "$PROJECT_ROOT/ui" && pnpm dev &
+cd "$PROJECT_ROOT/ui"
+nohup pnpm vite > "$PROJECT_ROOT/ui/ui-server.log" 2>&1 &
 UI_PID=$!
+
+# Start RAG (Python)
+echo "🧠 Starting RAG Server (port 8000)..."
+cd "$PROJECT_ROOT/server"
+nohup uvicorn api:app --port 8000 > "$PROJECT_ROOT/server/rag-server.log" 2>&1 &
+RAG_PID=$!
 
 cd "$PROJECT_ROOT"
 
 echo ""
-echo "✅ Agent-Lab is starting up!"
+echo "✅ Agent-Lab started!"
 echo ""
-echo "📊 Available Services:"
+echo "📊 Services:"
 echo "   • Agent Server: http://localhost:3001"
 echo "   • UI Interface: http://localhost:5173"
-echo "   • RAG System: Start from UI or via POST /rag/start"
+echo "   • RAG System:   http://localhost:8000"
 echo ""
-echo "🔧 Optional Python Setup for RAG:"
-echo "   pip install -r requirements.txt"
+echo "📜 Logs:"
+echo "   • main-server.log"
+echo "   • ui/ui-server.log"
+echo "   • server/rag-server.log"
 echo ""
 echo "Press Ctrl+C to stop all servers"
 echo ""
 
-# Wait for interrupt
-trap "echo '🛑 Stopping servers...'; kill $SERVER_PID $UI_PID 2>/dev/null; exit" INT
+# Stop everything cleanly on Ctrl+C
+trap "echo '🛑 Stopping servers...'; kill $SERVER_PID $UI_PID $RAG_PID 2>/dev/null; exit" INT
 wait

@@ -3,7 +3,7 @@
 
 import { BaseAgent } from "../server/agent-builder/agent.ts";
 
-export class WorkingStockBotAgent extends BaseAgent {
+export default class WorkingStockBotAgent extends BaseAgent {
   constructor() {
     super({
       name: "Working Stock Bot",

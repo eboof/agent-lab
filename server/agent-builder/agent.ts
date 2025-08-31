@@ -10,8 +10,9 @@ export interface AgentConfig {
   name: string;
   description: string;
   version: string;
-  systemPrompt: string;
-  tools: ToolConfig[];
+  systemPrompt?: string;
+  prompt?: string;  // Alternative field name for systemPrompt
+  tools: ToolConfig[] | string[];  // Support both formats
   inputSchema: Record<string, SchemaField>;
   outputSchema: Record<string, SchemaField>;
   dependencies?: string[];
@@ -44,13 +45,18 @@ export abstract class BaseAgent {
     const envPath = path.resolve(__dirname, '../../.env');
     loadDotenv({ path: envPath });
     
+    // Normalize systemPrompt field
+    if (config.prompt && !config.systemPrompt) {
+      config.systemPrompt = config.prompt;
+    }
+    
     this.config = config;
   }
 
-  async run(args: string[]): Promise<any> {
+  async run(args: string[]): Promise<Record<string, any>> {
     console.log(`🤖 Running ${this.config.name}...`);
     console.log(`📝 Description: ${this.config.description}`);
-    console.log(`🔧 Tools: ${this.config.tools.map(t => t.name).join(', ') || 'none'}`);
+    console.log(`🔧 Tools: ${this.config.tools.map(t => typeof t === 'string' ? t : t.name).join(', ') || 'none'}`);
     
     try {
       // Parse input based on schema
@@ -150,4 +156,14 @@ export abstract class BaseAgent {
   protected getOpenAIKey(): string | undefined {
     return this.getApiKey('OPENAI_API_KEY');
   }
+
+  // Tool execution method for agents
+  protected async runTool(toolId: string, params: Record<string, any>): Promise<any> {
+    this.log(`Running tool: ${toolId} with params:`, params);
+    // TODO: Implement actual tool execution
+    throw new Error(`Tool execution not implemented for ${toolId}`);
+  }
+
+  // Abstract method that each agent must implement
+  protected abstract execute(input: Record<string, any>): Promise<Record<string, any>>;
 }

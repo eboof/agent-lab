@@ -1,9 +1,12 @@
-// Agent-Lab v4.0 - Unified AI Platform
-// Combines agents, chatbot, and RAG functionality with local model support
+// Agent-Lab v4.1 - Unified AI Platform
+// Adds 🛠 Tools Playground tab
 
 import { useState, useEffect } from "react";
 import yaml from "js-yaml";
 import "./App.css";
+
+// Import Tools Playground
+import ToolsPlayground from "./pages/tools/Playground";
 
 // Tool Library (simplified version for UI)
 const TOOLS = [
@@ -25,6 +28,63 @@ const CATEGORIES = {
   'web': '🌍 Web Tools',
   'system': '⚙️ System Tools'
 };
+
+// ---------------- Root App ----------------
+export default function App() {
+  const [tab, setTab] = useState<"agents" | "chat" | "rag" | "tools">("agents");
+
+  return (
+    <div className="app-container">
+      <div className="app-wrapper">
+        {/* Header with Navigation */}
+        <div className="app-header">
+          <div className="header-content">
+            <div className="title-section">
+              <h1 className="app-title">🧪 Agent Lab</h1>
+              <p className="app-subtitle">Your AI Lego Set - Agents, Chat, RAG & Tools</p>
+            </div>
+            
+            {/* Navigation Tabs */}
+            <div className="nav-tabs">
+              <button
+                onClick={() => setTab("agents")}
+                className={`nav-tab ${tab === "agents" ? "active" : ""}`}
+              >
+                🤖 Agents
+              </button>
+              <button
+                onClick={() => setTab("chat")}
+                className={`nav-tab ${tab === "chat" ? "active" : ""}`}
+              >
+                💬 Chatbot
+              </button>
+              <button
+                onClick={() => setTab("rag")}
+                className={`nav-tab ${tab === "rag" ? "active" : ""}`}
+              >
+                🧠 RAG Chat
+              </button>
+              <button
+                onClick={() => setTab("tools")}
+                className={`nav-tab ${tab === "tools" ? "active" : ""}`}
+              >
+                🛠 Tools
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="app-content">
+          {tab === "agents" && <AgentsUI />}
+          {tab === "chat" && <ChatUI />}
+          {tab === "rag" && <RAGUI />}
+          {tab === "tools" && <ToolsPlayground />}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // Agent Builder Component  
 const AgentBuilder = () => {
@@ -51,6 +111,24 @@ const AgentBuilder = () => {
 
   const updateForm = (field: string, value: any) => {
     setForm(prev => ({ ...prev, [field]: value }));
+  };
+
+  const formatSchemaForCode = (schema: any) => {
+    if (schema.length === 0) return '{}';
+    const obj = schema.reduce((acc: any, field: any) => {
+      acc[field.key] = { type: field.type, required: field.required, description: field.description };
+      return acc;
+    }, {});
+    return JSON.stringify(obj, null, 6).replace(/^/gm, '      ');
+  };
+
+  const formatToolsForCode = (toolIds: string[]) => {
+    if (toolIds.length === 0) return '[]';
+    const toolConfigs = toolIds.map((id: string) => {
+      const tool = TOOLS.find(t => t.id === id);
+      return { id, name: tool?.name || id, type: tool?.category || 'unknown' };
+    });
+    return JSON.stringify(toolConfigs, null, 6).replace(/^/gm, '      ');
   };
 
   // Generate code template
@@ -110,24 +188,6 @@ export class ${form.name.replace(/\\s+/g, "")}Agent extends BaseAgent {
   const removeSchemaField = (schemaType: string, index: number) => {
     const updated = (form as any)[schemaType].filter((_: any, i: number) => i !== index);
     updateForm(schemaType, updated);
-  };
-
-  const formatSchemaForCode = (schema: any) => {
-    if (schema.length === 0) return '{}';
-    const obj = schema.reduce((acc: any, field: any) => {
-      acc[field.key] = { type: field.type, required: field.required, description: field.description };
-      return acc;
-    }, {});
-    return JSON.stringify(obj, null, 6).replace(/^/gm, '      ');
-  };
-
-  const formatToolsForCode = (toolIds: string[]) => {
-    if (toolIds.length === 0) return '[]';
-    const toolConfigs = toolIds.map((id: string) => {
-      const tool = TOOLS.find(t => t.id === id);
-      return { id, name: tool?.name || id, type: tool?.category || 'unknown' };
-    });
-    return JSON.stringify(toolConfigs, null, 6).replace(/^/gm, '      ');
   };
 
   // Load existing agents
@@ -553,55 +613,6 @@ interface ModelOption {
   name: string;
   type: "openai" | "local" | "anthropic";
   description: string;
-}
-
-export default function App() {
-  const [tab, setTab] = useState<"agents" | "chat" | "rag">("agents");
-
-  return (
-    <div className="app-container">
-      <div className="app-wrapper">
-        {/* Header with Navigation */}
-        <div className="app-header">
-          <div className="header-content">
-            <div className="title-section">
-              <h1 className="app-title">🧪 Agent Lab</h1>
-              <p className="app-subtitle">Your AI Lego Set - Agents, Chat & RAG</p>
-            </div>
-            
-            {/* Navigation Tabs */}
-            <div className="nav-tabs">
-              <button
-                onClick={() => setTab("agents")}
-                className={`nav-tab ${tab === "agents" ? "active" : ""}`}
-              >
-                🤖 Agents
-              </button>
-              <button
-                onClick={() => setTab("chat")}
-                className={`nav-tab ${tab === "chat" ? "active" : ""}`}
-              >
-                💬 Chatbot
-              </button>
-              <button
-                onClick={() => setTab("rag")}
-                className={`nav-tab ${tab === "rag" ? "active" : ""}`}
-              >
-                🧠 RAG Chat
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main Content */}
-        <div className="app-content">
-          {tab === "agents" && <AgentsUI />}
-          {tab === "chat" && <ChatUI />}
-          {tab === "rag" && <RAGUI />}
-        </div>
-      </div>
-    </div>
-  );
 }
 
 // ---------------- Agents UI ----------------

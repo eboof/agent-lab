@@ -79,7 +79,7 @@ function toPascalCase(str: string): string {
 }
 
 /** Generate execute logic based on selected tools */
-function generateExecuteLogic(config: AgentConfig): string {
+function generateExecuteLogic(config: AgentConfig): { imports: string; logic: string } {
   const tools = config.tools || [];
   const hasFinanceAPI = tools.some(t => typeof t === 'string' ? t === 'yahoo-finance' : t.id === 'yahoo-finance');
   const hasOpenAI = tools.some(t => typeof t === 'string' ? t === 'openai-api' : t.id === 'openai-api');
@@ -87,7 +87,7 @@ function generateExecuteLogic(config: AgentConfig): string {
   const hasCLI = tools.some(t => typeof t === 'string' ? t === 'cli-tool' : t.id === 'cli-tool');
   
   let imports = '';
-  let logic = `// Process based on selected tools\n`;
+  let logic = `      // Process based on selected tools: ${tools.map(t => typeof t === 'string' ? t : t.id).join(', ')}\n`;
   
   // Add imports for selected tools
   if (hasFinanceAPI) {
@@ -123,17 +123,17 @@ function generateExecuteLogic(config: AgentConfig): string {
     
     if (hasAnthropic) {
       logic += `      const anthropicKey = this.getAnthropicKey();\n`;
-      logic += `      if (anthropicKey && stockData) {\n`;
+      logic += `      if (anthropicKey && ${hasFinanceAPI ? 'stockData' : 'input'}) {\n`;
       logic += `        try {\n`;
-      logic += `          aiAnalysis = await AnthropicTool.analyzeStockData(anthropicKey, stockData, this.config.systemPrompt);\n`;
+      logic += `          aiAnalysis = await AnthropicTool.${hasFinanceAPI ? 'analyzeStockData(anthropicKey, stockData, this.config.systemPrompt)' : 'analyze(anthropicKey, JSON.stringify(input), this.config.systemPrompt)'};\n`;
       logic += `          this.log("Generated AI analysis with Claude");\n`;
       logic += `        } catch (error: any) {\n`;
       logic += `          this.error("Claude analysis failed:", error.message);\n`;
       logic += `        }\n`;
-      logic += `      }`
+      logic += `      }`;
       
       if (hasOpenAI) {
-        logic += ` else {\n        `;
+        logic += ` else {\n`;
       } else {
         logic += `\n\n`;
       }
@@ -143,19 +143,19 @@ function generateExecuteLogic(config: AgentConfig): string {
       if (!hasAnthropic) logic += `      `;
       logic += `const openaiKey = this.getOpenAIKey();\n`;
       if (!hasAnthropic) logic += `      `;
-      logic += `if (openaiKey && stockData) {\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `  try {\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `    aiAnalysis = await OpenAITool.analyzeStockData(openaiKey, stockData, this.config.systemPrompt);\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `    this.log("Generated AI analysis with GPT-4");\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `  } catch (error: any) {\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `    this.error("OpenAI analysis failed:", error.message);\n`;
-      if (!hasAnthropic) logic += `      `;
-      logic += `  }\n`;
+      logic += `if (openaiKey && ${hasFinanceAPI ? 'stockData' : 'input'}) {\n`;
+      if (!hasAnthropic) logic += `        `;
+      logic += `try {\n`;
+      if (!hasAnthropic) logic += `          `;
+      logic += `aiAnalysis = await OpenAITool.${hasFinanceAPI ? 'analyzeStockData(openaiKey, stockData, this.config.systemPrompt)' : 'analyze(openaiKey, JSON.stringify(input), this.config.systemPrompt)'};\n`;
+      if (!hasAnthropic) logic += `          `;
+      logic += `this.log("Generated AI analysis with GPT-4");\n`;
+      if (!hasAnthropic) logic += `        `;
+      logic += `} catch (error: any) {\n`;
+      if (!hasAnthropic) logic += `          `;
+      logic += `this.error("OpenAI analysis failed:", error.message);\n`;
+      if (!hasAnthropic) logic += `        `;
+      logic += `}\n`;
       if (!hasAnthropic) logic += `      `;
       logic += `}\n`;
       
@@ -178,7 +178,7 @@ function generateExecuteLogic(config: AgentConfig): string {
     logic += `              const [command, ...args] = cmd.split(' ');\n`;
     logic += `              const result = await CLITool.executeCommand(command, args);\n`;
     logic += `              cliResults.push({ command: cmd, ...result });\n`;
-    logic += `              this.log(\`Executed command: \${cmd}\`, result.success ? '✅' : '❌');\n`;
+    logic += `              this.log(\`Executed: \${cmd}\`, result.success ? '✅' : '❌');\n`;
     logic += `            }\n`;
     logic += `          } catch (error: any) {\n`;
     logic += `            this.error("CLI command failed:", error.message);\n`;
@@ -188,9 +188,16 @@ function generateExecuteLogic(config: AgentConfig): string {
     logic += `      }\n\n`;
   }
   
+  // Add task completion summary
+  if (hasCLI) {
+    logic += `      // Generate CLI task summary\n`;
+    logic += `      const successfulCommands = cliResults.filter(r => r.success);\n`;
+    logic += `      const taskSummary = \`Executed \${cliResults.length} commands, \${successfulCommands.length} successful. Working directory: \${process.cwd()}\`;\n\n`;
+  }
+  
   if (tools.length === 0) {
     logic += `      // No tools selected - basic processing\n`;
-    logic += `      const response = \`Processed input: \${JSON.stringify(input)}\`;\n`;
+    logic += `      const response = \`Processed input: \${JSON.stringify(input)}\`;\n\n`;
   }
   
   return { imports, logic };
@@ -206,9 +213,18 @@ function generateOutputStructure(config: AgentConfig): string {
     const toolId = typeof t === 'string' ? t : t.id;
     return toolId === 'openai-api' || toolId === 'anthropic-api';
   });
+  const hasCLI = tools.some(t => typeof t === 'string' ? t === 'cli-tool' : t.id === 'cli-tool');
   
   if (fields.length === 0) {
-    return `result: aiAnalysis?.analysis || stockData?.quote?.currentPrice?.toString() || "Agent executed successfully",\n        `;
+    // Default output based on tools used
+    if (hasCLI) {
+      return `task_completed: cliResults.length > 0 ? \`Executed \${cliResults.length} shell commands\` : "No commands executed",
+        commands_executed: cliResults.map(r => r.command) || [],
+        results: cliResults || [],
+        summary: taskSummary || "Task completed",\n        `;
+    } else {
+      return `result: aiAnalysis?.analysis || stockData?.quote?.currentPrice?.toString() || "Agent executed successfully",\n        `;
+    }
   }
   
   return fields.map(field => {
@@ -243,6 +259,20 @@ function generateOutputStructure(config: AgentConfig): string {
       case 'key_metrics':
       case 'metrics':
         value = hasFinanceAPI ? 'stockData?.technicalIndicators || {}' : '{}';
+        break;
+      case 'task_completed':
+      case 'task_summary':
+        value = hasCLI ? 'taskSummary || "Task completed"' : '"Task completed"';
+        break;
+      case 'commands_executed':
+        value = hasCLI ? 'cliResults.map(r => r.command) || []' : '[]';
+        break;
+      case 'results':
+      case 'command_results':
+        value = hasCLI ? 'cliResults || []' : '[]';
+        break;
+      case 'summary':
+        value = hasCLI ? 'taskSummary || "Task completed"' : '"Task completed"';
         break;
       default:
         // Fallback based on field type
