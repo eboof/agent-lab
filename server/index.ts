@@ -30,6 +30,13 @@ if (result.error) {
   }
 });
 
+// Validate SMTP (non-critical for server startup)
+["SMTP_USER", "SMTP_PASS", "SMTP_HOST", "SMTP_PORT", "SMTP_FROM"].forEach((key) => {
+  if (!process.env[key]) {
+    console.warn(`⚠️ Missing SMTP environment variable: ${key} (email features disabled)`);
+  }
+});
+
 // --- Imports ---
 import express from "express";
 import bodyParser from "body-parser";
@@ -38,11 +45,11 @@ import cron from "node-cron";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import multer from "multer";
-import * as yaml from "js-yaml";
 import { spawn, ChildProcess } from "child_process";
 
-// Tools (unified auto-discovery)
-import { loadTools, getToolById, TOOL_LIBRARY } from "../tools/tool-library.ts";
+// Tools (new registry system)
+import toolsRouter from "./api/tools.ts";
+import agentsRouter from "./api/agents.ts";
 
 // --- Simple fetch polyfill ---
 async function fetch(url: string, options?: any) {
@@ -105,176 +112,15 @@ app.use((req, res, next) => {
 });
 app.use(bodyParser.json());
 
-// Initialize tools at startup
-(async () => {
-  await loadTools();
-  console.log(`🔧 Loaded ${TOOL_LIBRARY.length} tools`);
-})();
-
 //
 // === Tools API ===
 //
-app.get("/api/tools/list", (req, res) => res.json(TOOL_LIBRARY));
+app.use("/api/tools", toolsRouter);
 
-app.get("/api/tools/load/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const tool = getToolById(id);
-    
-    if (!tool) {
-      return res.status(404).json({ error: `Tool ${id} not found` });
-    }
-
-    // Find the tool file
-    const toolsDir = path.join(__dirname, "../tools/implementations");
-    const fileName = `${id}.ts`;
-    const filePath = path.join(toolsDir, fileName);
-    
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: `Tool file ${fileName} not found` });
-    }
-
-    // Read the source code
-    const sourceCode = fs.readFileSync(filePath, "utf-8");
-    
-    res.json({
-      id: tool.id,
-      name: tool.name,
-      description: tool.description,
-      icon: tool.icon,
-      category: tool.category,
-      sourceCode,
-      fileName,
-      lastModified: fs.statSync(filePath).mtime
-    });
-    
-  } catch (error: any) {
-    console.error("Tool load error:", error);
-    res.status(500).json({ error: `Failed to load tool: ${error.message}` });
-  }
-});
-
-app.post("/api/tools/create", async (req, res) => {
-  try {
-    const { id, name, description, icon, category, code } = req.body;
-    
-    if (!id || !name || !code) {
-      return res.status(400).json({ error: "Missing required fields: id, name, code" });
-    }
-
-    // Validate tool ID format
-    if (!/^[a-z0-9-]+$/.test(id)) {
-      return res.status(400).json({ error: "Tool ID must contain only lowercase letters, numbers, and hyphens" });
-    }
-
-    // Check if tool already exists
-    const existingTool = getToolById(id);
-    if (existingTool) {
-      return res.status(400).json({ error: `Tool with ID "${id}" already exists` });
-    }
-
-    // Create tool file
-    const toolsDir = path.join(__dirname, "../tools/implementations");
-    const fileName = `${id}.ts`;
-    const filePath = path.join(toolsDir, fileName);
-
-    // Generate tool code with proper imports
-    const toolCode = `// ${fileName}
-// Generated tool - ${new Date().toISOString()}
-
-import type { ToolDefinition } from "../tool-types.ts";
-
-${code}
-`;
-
-    // Write tool file
-    fs.writeFileSync(filePath, toolCode);
-
-    // Reload tools to include the new one
-    await loadTools();
-
-    res.json({ 
-      success: true, 
-      message: `Tool "${name}" created successfully`,
-      id,
-      file: fileName
-    });
-
-  } catch (error: any) {
-    console.error("Tool creation error:", error);
-    res.status(500).json({ error: `Failed to create tool: ${error.message}` });
-  }
-});
-
-app.put("/api/tools/update/:id", async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { name, description, icon, category, code } = req.body;
-    
-    if (!code) {
-      return res.status(400).json({ error: "Missing required field: code" });
-    }
-
-    // Check if tool exists
-    const existingTool = getToolById(id);
-    if (!existingTool) {
-      return res.status(404).json({ error: `Tool with ID "${id}" not found` });
-    }
-
-    // Update tool file
-    const toolsDir = path.join(__dirname, "../tools/implementations");
-    const fileName = `${id}.ts`;
-    const filePath = path.join(toolsDir, fileName);
-    
-    if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ error: `Tool file ${fileName} not found` });
-    }
-
-    // Generate updated tool code with proper imports
-    const toolCode = `// ${fileName}
-// Updated tool - ${new Date().toISOString()}
-
-import type { ToolDefinition } from "../tool-types.ts";
-
-${code}
-`;
-
-    // Write updated tool file
-    fs.writeFileSync(filePath, toolCode);
-
-    // Reload tools to reflect changes
-    await loadTools();
-
-    res.json({ 
-      success: true, 
-      message: `Tool "${name || existingTool.name}" updated successfully`,
-      id,
-      file: fileName
-    });
-
-  } catch (error: any) {
-    console.error("Tool update error:", error);
-    res.status(500).json({ error: `Failed to update tool: ${error.message}` });
-  }
-});
-
-app.post("/api/tools/run/:id", async (req, res) => {
-  const { id } = req.params;
-  const params = req.body || {};
-  const tool = getToolById(id);
-
-  if (!tool) {
-    return res.status(404).json({ error: `Tool ${id} not found` });
-  }
-
-  try {
-    const result = await tool.call(params);
-    res.json({ tool: id, result });
-  } catch (err: any) {
-    console.error(`❌ Tool ${id} failed:`, err);
-    res.status(500).json({ error: err.message });
-  }
-});
+//
+// === Agents API ===
+//
+app.use("/api/agents", agentsRouter);
 
 //
 // === RAG API ===
@@ -489,12 +335,50 @@ app.post("/run", async (req, res) => {
   }
 });
 
+// Chat endpoint for AI Chatbot UI
+app.post("/chat", async (req, res) => {
+  const { message, model = "anthropic" } = req.body;
+  
+  try {
+    let response = "";
+    
+    if (model === "anthropic") {
+      const result = await anthropic.messages.create({
+        model: "claude-3-5-sonnet-20241022",
+        max_tokens: 1000,
+        messages: [{ role: "user", content: message }]
+      });
+      response = result.content[0].type === 'text' ? result.content[0].text : 'No response';
+    } else if (model === "openai") {
+      const result = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: message }],
+        max_tokens: 1000
+      });
+      response = result.choices[0]?.message?.content || 'No response';
+    } else {
+      return res.status(400).json({ error: "Unsupported model" });
+    }
+    
+    // Return chat history format expected by UI
+    res.json({
+      history: [
+        { role: "user", content: message },
+        { role: "assistant", content: response }
+      ]
+    });
+  } catch (e: any) {
+    console.error("Chat error:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // --- Healthcheck ---
 app.get("/health", (req, res) => {
   let agentCount = 0;
   try {
     if (fs.existsSync(agentsDir)) {
-      agentCount = fs.readdirSync(agentsDir).filter(f => f.endsWith(".agent.ts")).length;
+      agentCount = fs.readdirSync(agentsDir).filter(f => f.endsWith(".agent.yaml")).length;
     }
   } catch {
     agentCount = -1; // error case
@@ -519,6 +403,9 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
   });
 });
+
+// Mount tools API router
+app.use("/api/tools", toolsRouter);
 
 //
 // --- Start ---

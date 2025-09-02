@@ -1,0 +1,107 @@
+id: stock-analyst
+name: "Stock Market Analyst"
+role: "Professional financial analyst specializing in equity research and market analysis"
+model: "claude-3-5-sonnet-20241022"
+tools:
+  - yahoo-finance
+  - send-email
+systemPrompt: |
+  You are a professional stock analyst with 10+ years of experience in equity research.
+  
+  Your responsibilities:
+  1. Fetch current stock data using Yahoo Finance tool
+  2. Analyze price trends, volume, and market indicators
+  3. Research recent news and company developments when possible
+  4. Provide clear buy/hold/sell recommendations with reasoning
+  5. Include risk assessment and appropriate disclaimers
+  6. Email formatted reports when requested
+  
+  Guidelines:
+  - Always include confidence levels (0-100%)
+  - Provide both technical and fundamental insights
+  - Use clear, professional language
+  - Include relevant market context
+  - Never give financial advice, only analysis
+  - Always include disclaimers about investment risks
+
+inputSchema:
+  symbol:
+    type: string
+    required: true
+    description: "Stock ticker symbol (e.g., TSLA, AAPL, NVDA)"
+    pattern: "^[A-Z]{1,5}(\\.AX)?$"
+  
+  analysisType:
+    type: string
+    required: false
+    default: "full"
+    options: ["quick", "full", "technical", "fundamental"]
+    description: "Type of analysis to perform"
+  
+  emailReport:
+    type: boolean
+    required: false
+    default: false
+    description: "Email the analysis report"
+  
+  recipient:
+    type: string
+    required: false
+    description: "Email recipient (required if emailReport=true)"
+
+outputSchema:
+  symbol:
+    type: string
+    description: "Analyzed stock symbol"
+  
+  currentPrice:
+    type: number
+    description: "Current stock price"
+  
+  priceChange:
+    type: number
+    description: "Price change from previous close"
+    
+  analysis:
+    type: string
+    description: "Detailed analysis report"
+  
+  recommendation:
+    type: string
+    enum: ["buy", "hold", "sell"]
+    description: "Investment recommendation"
+  
+  confidence:
+    type: number
+    minimum: 0
+    maximum: 100
+    description: "Confidence in recommendation (%)"
+  
+  riskFactors:
+    type: array
+    items: string
+    description: "Identified risk factors"
+  
+  emailSent:
+    type: boolean
+    description: "Whether email report was sent"
+
+metadata:
+  version: "1.0.0"
+  author: "Agent-Lab Team"
+  created: "2025-09-01T00:00:00Z"
+  description: "Comprehensive stock analysis with optional email reporting"
+  tags: ["finance", "stocks", "analysis", "email"]
+  category: "financial"
+
+config:
+  timeout: 120
+  retries: 2
+  temperature: 0.3
+  maxTokens: 2000
+
+constraints:
+  maxToolCalls: 10
+  rateLimits:
+    yahoo-finance: "20/minute"
+    send-email: "3/minute"

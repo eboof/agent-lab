@@ -1,61 +1,70 @@
-// server/tools/tool-library.ts
-// Auto-discovery of all tools in ./implementations
+// tools/tool-library.ts
+// Central registry for all tools with params → configSchema conversion
 
-import * as path from "path";
-import * as fs from "fs";
-import { fileURLToPath } from "url";
 import type { ToolDefinition } from "./tool-types.ts";
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// Import each tool here
+import { YahooFinanceTool } from "./implementations/yahoo-finance.ts";
+import { SendEmailTool } from "./implementations/send-email.ts";
+// import { OpenAITool } from "./implementations/openai-api.ts";
 
-const toolsDir = path.join(__dirname, "implementations");
-
-let TOOL_LIBRARY: ToolDefinition[] = [];
+const tools: ToolDefinition[] = [
+  YahooFinanceTool,
+  // OpenAITool,
+   SendEmailTool,
+];
 
 /**
- * Load all tools from ./implementations
+ * Convert ToolDefinition.params → Playground configSchema
  */
-export async function loadTools(): Promise<ToolDefinition[]> {
-  const files = fs.readdirSync(toolsDir).filter(f => f.endsWith(".ts"));
-  const toolDefs: ToolDefinition[] = [];
-
-  for (const file of files) {
-    try {
-      const mod = await import(path.join(toolsDir, file));
-      const tool = Object.values(mod)[0] as ToolDefinition;
-      if (tool?.id) {
-        // Convert params array to configSchema object for UI compatibility
-        const configSchema: Record<string, any> = {};
-        tool.params.forEach(param => {
-          configSchema[param.name] = {
-            type: param.type,
-            label: param.name.charAt(0).toUpperCase() + param.name.slice(1),
-            description: param.description,
-            required: param.required,
-            defaultValue: tool.defaults?.[param.name]
-          };
-        });
-        
-        const toolWithSchema = {
-          ...tool,
-          configSchema,
-          icon: "🔧" // default icon
-        };
-        
-        toolDefs.push(toolWithSchema as any);
-      }
-    } catch (error) {
-      console.error(`Failed to load tool from ${file}:`, error);
+function toConfigSchema(tool: ToolDefinition) {
+  const schema: Record<string, any> = {};
+  if (tool.params) {
+    for (const param of tool.params) {
+      schema[param.name] = {
+        type: param.type || "string",
+        label: param.name,
+        description: param.description || "",
+        required: param.required || false,
+        defaultValue: param.default || "",
+        options: (param as any).options || [],
+      };
     }
   }
+  return schema;
+}
+
+/**
+ * Return tools in a Playground-friendly format
+ */
+export function listTools() {
+  return tools.map((t) => ({
+    id: t.id,
+    name: t.name,
+    description: t.description,
+    icon: "🔧",
+    category: "custom",
+    configSchema: toConfigSchema(t),
+  }));
+}
+
+/**
+ * Find a tool by ID
+ */
+export function getToolById(id: string) {
+  return tools.find((t) => t.id === id);
+}
+
+/**
+ * Execute a tool by ID with parameters
+ */
+export async function runTool(toolId: string, params: any): Promise<any> {
+  const tool = getToolById(toolId);
+  if (!tool) {
+    throw new Error(`Tool '${toolId}' not found`);
+  }
   
-  TOOL_LIBRARY = toolDefs;
-  return toolDefs;
+  return await tool.call(params);
 }
 
-export function getToolById(id: string): ToolDefinition | undefined {
-  return TOOL_LIBRARY.find(t => t.id === id);
-}
-
-export { TOOL_LIBRARY };
+export { tools };

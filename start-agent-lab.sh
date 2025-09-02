@@ -1,51 +1,58 @@
 #!/bin/bash
-# start-agent-lab.sh
-# Agent-Lab Unified Startup Script with auto-kill, logging, and RAG
+# start-agent-lab.sh – Agent-Lab Unified Startup
+# v2 – with .env check, JSON validation, log rotation
+# 2025-09-01
 
 echo "🧪 Starting Agent-Lab - Your AI Lego Set"
 echo "========================================"
 
-# Ensure we're in repo root
-if [ ! -f "package.json" ]; then
+PROJECT_ROOT="$(pwd)"
+
+# Ensure repo root
+if [ ! -f "$PROJECT_ROOT/package.json" ]; then
     echo "❌ Please run this script from the agent-lab root directory"
+    exit 1
+fi
+
+# Ensure .env exists
+if [ ! -f "$PROJECT_ROOT/.env" ]; then
+    echo "❌ Missing .env file at repo root"
     exit 1
 fi
 
 # Kill old processes
 echo "🔪 Killing old Agent-Lab processes..."
-pkill -f "node.*server/index.ts" 2>/dev/null
-pkill -f "vite" 2>/dev/null
-pkill -f "uvicorn" 2>/dev/null
+pkill -f "ts-node index.ts" 2>/dev/null || true
+pkill -f "vite" 2>/dev/null || true
+pkill -f "uvicorn" 2>/dev/null || true
 sleep 2
 
-# Install dependencies if missing
-if [ ! -d "node_modules" ]; then
-    echo "📦 Installing root Node.js dependencies..."
-    pnpm install
-fi
+# Validate JSON package files
+check_json () {
+    FILE=$1
+    if ! jq empty "$FILE" >/dev/null 2>&1; then
+        echo "❌ Invalid JSON: $FILE"
+        exit 1
+    fi
+}
+check_json "$PROJECT_ROOT/server/package.json"
+check_json "$PROJECT_ROOT/ui/package.json"
 
-if [ ! -d "server/node_modules" ]; then
-    echo "📦 Installing server dependencies..."
-    (cd server && pnpm install)
-fi
-
-if [ ! -d "ui/node_modules" ]; then
-    echo "📦 Installing UI dependencies..."
-    (cd ui && pnpm install)
-fi
-
-PROJECT_ROOT=$(pwd)
+# Rotate logs
+> "$PROJECT_ROOT/main-server.log"
+> "$PROJECT_ROOT/ui/ui-server.log"
+> "$PROJECT_ROOT/server/rag-server.log"
 
 # Start backend
 echo "🚀 Starting Agent-Lab Server (port 3001)..."
 cd "$PROJECT_ROOT/server"
-nohup pnpm ts-node index.ts > "$PROJECT_ROOT/main-server.log" 2>&1 &
+NODE_OPTIONS="--dns-result-order=ipv4first" nohup pnpm dev > "$PROJECT_ROOT/main-server.log" 2>&1 &
 SERVER_PID=$!
 
 # Start frontend
 echo "🎨 Starting UI Dev Server (port 5173)..."
 cd "$PROJECT_ROOT/ui"
-nohup pnpm vite > "$PROJECT_ROOT/ui/ui-server.log" 2>&1 &
+nohup pnpm dev > "$PROJECT_ROOT/ui/ui-server.log" 2>&1 &
 UI_PID=$!
 
 # Start RAG (Python)
@@ -72,6 +79,6 @@ echo ""
 echo "Press Ctrl+C to stop all servers"
 echo ""
 
-# Stop everything cleanly on Ctrl+C
+# Stop cleanly on Ctrl+C
 trap "echo '🛑 Stopping servers...'; kill $SERVER_PID $UI_PID $RAG_PID 2>/dev/null; exit" INT
 wait

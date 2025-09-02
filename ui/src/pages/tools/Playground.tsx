@@ -206,6 +206,116 @@ export const MyTool: ToolDefinition = {
     }
   };
 
+  const saveAsNewTool = async () => {
+    // Auto-suggest ID and name based on current tool
+    const suggestedId = editingTool.name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '') // Remove special chars
+      .replace(/\s+/g, '-') // Replace spaces with hyphens
+      .replace(/-+/g, '-') // Collapse multiple hyphens
+      .replace(/^-|-$/g, '') + '-v2'; // Add version suffix
+    
+    const suggestedName = `${editingTool.name} (Copy)`;
+    
+    const newId = prompt(
+      `Enter ID for new tool (cloned from ${editingTool.id}):\n\n` +
+      `Suggested: ${suggestedId}\n\n` +
+      `Format: lowercase letters, numbers, and hyphens only\n` +
+      `Examples: my-tool-v2, data-processor-enhanced, yahoo-finance-custom`
+    );
+    
+    if (!newId) return;
+
+    if (!/^[a-z0-9-]+$/.test(newId)) {
+      setCreateStatus({ type: 'error', message: 'Tool ID must contain only lowercase letters, numbers, and hyphens' });
+      return;
+    }
+
+    const newName = prompt(
+      `Enter name for new tool:\n\n` +
+      `Suggested: ${suggestedName}\n\n` +
+      `This will appear in the dropdown to distinguish from the original.`
+    ) || suggestedName;
+
+    setLoading(true);
+    setCreateStatus(null);
+
+    try {
+      const response = await fetch('http://localhost:3001/api/tools/create', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: newId,
+          name: newName,
+          description: editingTool.description,
+          icon: editingTool.icon,
+          category: editingTool.category,
+          code: editingTool.sourceCode.replace(
+            new RegExp(`id: "${editingTool.id}"`, 'g'),
+            `id: "${newId}"`
+          ).replace(
+            new RegExp(`name: "${editingTool.name}"`, 'g'),
+            `name: "${newName}"`
+          ),
+          baseToolId: editingTool.id
+        })
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCreateStatus({ type: 'success', message: `✅ Tool "${newName}" cloned as "${newId}"!` });
+        // Refresh tools list
+        const toolsRes = await fetch("http://localhost:3001/api/tools/list");
+        const toolsData = await toolsRes.json();
+        setTools(toolsData);
+      } else {
+        setCreateStatus({ type: 'error', message: `❌ Failed to clone tool: ${data.error || 'Unknown error'}` });
+      }
+    } catch (error: any) {
+      setCreateStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setCreateStatus(null), 5000);
+    }
+  };
+
+  const deleteTool = async () => {
+    if (!editingTool) return;
+    
+    if (!confirm(`Are you sure you want to delete "${editingTool.name}"? This action cannot be undone.`)) {
+      return;
+    }
+
+    setLoading(true);
+    setCreateStatus(null);
+
+    try {
+      const response = await fetch(`http://localhost:3001/api/tools/delete/${editingTool.id}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        setCreateStatus({ type: 'success', message: `✅ Tool "${editingTool.name}" deleted successfully!` });
+        // Refresh tools list and reset edit state
+        const toolsRes = await fetch("http://localhost:3001/api/tools/list");
+        const toolsData = await toolsRes.json();
+        setTools(toolsData);
+        setEditingTool(null);
+        setMode("test");
+      } else {
+        setCreateStatus({ type: 'error', message: `❌ Failed to delete tool: ${data.error || 'Unknown error'}` });
+      }
+    } catch (error: any) {
+      setCreateStatus({ type: 'error', message: `❌ Error: ${error.message}` });
+    } finally {
+      setLoading(false);
+      setTimeout(() => setCreateStatus(null), 5000);
+    }
+  };
+
   return (
     <div className="tools-playground">
       <div className="tools-header">
@@ -253,7 +363,7 @@ export const MyTool: ToolDefinition = {
           </option>
           {tools.map((tool) => (
             <option key={tool.id} value={tool.id}>
-              {tool.icon} {tool.name}
+              {tool.icon} {tool.name} ({tool.id})
             </option>
           ))}
         </select>
@@ -362,6 +472,9 @@ export const MyTool: ToolDefinition = {
                   value={newTool.id}
                   onChange={(e) => setNewTool(prev => ({ ...prev, id: e.target.value }))}
                 />
+                <p className="field-description">
+                  Format: lowercase letters, numbers, and hyphens only (e.g., data-processor, ai-analyzer)
+                </p>
               </div>
               <div className="form-field">
                 <label className="form-label">Name <span className="required">*</span></label>
@@ -463,7 +576,7 @@ export const MyTool: ToolDefinition = {
                 </option>
                 {tools.map((tool) => (
                   <option key={tool.id} value={tool.id}>
-                    {tool.icon} {tool.name}
+                    {tool.icon} {tool.name} ({tool.id})
                   </option>
                 ))}
               </select>
@@ -535,13 +648,29 @@ export const MyTool: ToolDefinition = {
                 </div>
               )}
 
-              <button
-                onClick={updateTool}
-                disabled={loading}
-                className="update-tool-btn"
-              >
-                {loading ? "⏳ Updating..." : "💾 Update Tool"}
-              </button>
+              <div className="edit-actions">
+                <button
+                  onClick={updateTool}
+                  disabled={loading}
+                  className="update-tool-btn"
+                >
+                  {loading ? "⏳ Updating..." : "💾 Update Tool"}
+                </button>
+                <button
+                  onClick={saveAsNewTool}
+                  disabled={loading}
+                  className="save-as-btn"
+                >
+                  {loading ? "⏳ Cloning..." : "📋 Save As New Tool"}
+                </button>
+                <button
+                  onClick={deleteTool}
+                  disabled={loading}
+                  className="delete-tool-btn"
+                >
+                  {loading ? "⏳ Deleting..." : "🗑️ Delete Tool"}
+                </button>
+              </div>
             </div>
           )}
         </div>

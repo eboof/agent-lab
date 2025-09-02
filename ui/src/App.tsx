@@ -1,5 +1,5 @@
-// Agent-Lab v4.1 - Unified AI Platform
-// Adds 🛠 Tools Playground tab
+// Agent-Lab v5.0 - Multi-Agent Orchestration Platform
+// Phase 1: YAML-based agent system with full CRUD
 
 import { useState, useEffect } from "react";
 import yaml from "js-yaml";
@@ -7,6 +7,11 @@ import "./App.css";
 
 // Import Tools Playground
 import ToolsPlayground from "./pages/tools/Playground";
+
+// Import new Agent components
+import RunAgents from "./pages/agents/RunAgents";
+import BuildAgent from "./pages/agents/BuildAgent";
+import AgentLibrary from "./pages/agents/AgentLibrary";
 
 // Tool Library (simplified version for UI)
 const TOOLS = [
@@ -32,6 +37,7 @@ const CATEGORIES = {
 // ---------------- Root App ----------------
 export default function App() {
   const [tab, setTab] = useState<"agents" | "chat" | "rag" | "tools">("agents");
+  const [agentSubTab, setAgentSubTab] = useState<"run" | "build" | "library">("run");
 
   return (
     <div className="app-container">
@@ -76,7 +82,7 @@ export default function App() {
 
         {/* Main Content */}
         <div className="app-content">
-          {tab === "agents" && <AgentsUI />}
+          {tab === "agents" && <NewAgentsUI agentSubTab={agentSubTab} setAgentSubTab={setAgentSubTab} />}
           {tab === "chat" && <ChatUI />}
           {tab === "rag" && <RAGUI />}
           {tab === "tools" && <ToolsPlayground />}
@@ -86,8 +92,50 @@ export default function App() {
   );
 }
 
-// Agent Builder Component  
-const AgentBuilder = () => {
+// ---------------- New Agents UI (Phase 1) ----------------
+interface NewAgentsUIProps {
+  agentSubTab: "run" | "build" | "library";
+  setAgentSubTab: (tab: "run" | "build" | "library") => void;
+}
+
+function NewAgentsUI({ agentSubTab, setAgentSubTab }: NewAgentsUIProps) {
+  return (
+    <div className="agents-ui">
+      <div className="section-header">
+        <h2 className="section-title">🤖 Agents</h2>
+        
+        <div className="agent-sub-tabs">
+          <button
+            onClick={() => setAgentSubTab("run")}
+            className={`sub-tab ${agentSubTab === "run" ? "active" : ""}`}
+          >
+            ▶️ Run Agents
+          </button>
+          <button
+            onClick={() => setAgentSubTab("build")}
+            className={`sub-tab ${agentSubTab === "build" ? "active" : ""}`}
+          >
+            🔧 Build Agent
+          </button>
+          <button
+            onClick={() => setAgentSubTab("library")}
+            className={`sub-tab ${agentSubTab === "library" ? "active" : ""}`}
+          >
+            📚 Agent Library
+          </button>
+        </div>
+      </div>
+
+      {/* Content based on active sub-tab */}
+      {agentSubTab === "run" && <RunAgents />}
+      {agentSubTab === "build" && <BuildAgent />}
+      {agentSubTab === "library" && <AgentLibrary />}
+    </div>
+  );
+}
+
+// ---------------- Legacy Agent Builder (Deprecated) ----------------
+const LegacyAgentBuilder = () => {
   const [form, setForm] = useState({
     name: "MyAgent",
     description: "An example agent",
@@ -615,188 +663,14 @@ interface ModelOption {
   description: string;
 }
 
-// ---------------- Agents UI ----------------
-function AgentsUI() {
-  const [subTab, setSubTab] = useState<"run" | "build">("run");
-  const [agents, setAgents] = useState<string[]>([]);
-  const [output, setOutput] = useState("");
-  const [input, setInput] = useState("");
-  const [selectedAgent, setSelectedAgent] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [ragStatus, setRagStatus] = useState<{ready: boolean, process: string}>({ready: false, process: "stopped"});
-  const [ragLoading, setRagLoading] = useState(false);
-
-  async function loadAgents() {
-    try {
-      const res = await fetch("http://localhost:3001/agents");
-      setAgents(await res.json());
-    } catch (err) {
-      setOutput("❌ Error connecting to agent server. Make sure server is running on port 3001.");
-    }
-  }
-
-  async function runAgent(agent: string) {
-    setLoading(true);
-    try {
-      const res = await fetch("http://localhost:3001/run", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ agent, args: input ? [input] : [] }),
-      });
-      const data = await res.json();
-      setOutput(yaml.dump(data.output || data, { indent: 2 }));
-    } catch (err) {
-      setOutput(`❌ Error running agent: ${err}`);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function loadRagStatus() {
-    try {
-      const res = await fetch("http://localhost:3001/rag/status");
-      const data = await res.json();
-      setRagStatus(data);
-    } catch (err) {
-      console.error("Failed to load RAG status:", err);
-    }
-  }
-
-  async function startRagServer() {
-    setRagLoading(true);
-    try {
-      const res = await fetch("http://localhost:3001/rag/start", { method: "POST" });
-      const data = await res.json();
-      if (data.success) {
-        setOutput("🚀 RAG server starting...");
-        // Poll status until ready, then check if it actually started
-        setTimeout(() => {
-          loadRagStatus();
-          setTimeout(() => {
-            if (!ragStatus.ready) {
-              setOutput("⚠️ RAG server failed to start. This may be due to missing Python dependencies. The AI Chatbot and Agent Builder work without RAG.");
-            }
-          }, 5000);
-        }, 2000);
-      } else {
-        setOutput(`❌ Failed to start RAG server: ${data.error}`);
-      }
-    } catch (err) {
-      setOutput(`❌ Error starting RAG server: ${err}`);
-    } finally {
-      setRagLoading(false);
-    }
-  }
-
-  useEffect(() => {
-    loadAgents();
-    loadRagStatus();
-  }, []);
-
+// ---------------- Legacy Agents UI (Deprecated) ----------------
+function LegacyAgentsUI() {
+  // This component is deprecated in favor of Phase 1 YAML-based system
   return (
-    <div className="agents-ui">
-      <div className="section-header">
-        <h2 className="section-title">Agents</h2>
-        
-        {/* RAG Server Status */}
-        <div className="rag-status-section">
-          <div className="rag-status">
-            <span className={`status-indicator ${ragStatus.ready ? 'ready' : 'stopped'}`}>
-              {ragStatus.ready ? '🟢' : '🔴'} RAG Server: {ragStatus.ready ? 'Ready' : 'Stopped'}
-            </span>
-            {!ragStatus.ready && (
-              <button 
-                onClick={startRagServer}
-                disabled={ragLoading}
-                className="rag-start-btn"
-              >
-                {ragLoading ? '⏳ Starting...' : '🚀 Start RAG Server'}
-              </button>
-            )}
-          </div>
-        </div>
-        
-        <div className="agent-sub-tabs">
-          <button
-            onClick={() => setSubTab("run")}
-            className={`sub-tab ${subTab === "run" ? "active" : ""}`}
-          >
-            ▶️ Run Agents
-          </button>
-          <button
-            onClick={() => setSubTab("build")}
-            className={`sub-tab ${subTab === "build" ? "active" : ""}`}
-          >
-            🔧 Build Agent
-          </button>
-        </div>
-        {subTab === "run" && (
-          <button onClick={loadAgents} className="refresh-btn">
-            🔄 Refresh
-          </button>
-        )}
-      </div>
-
-      {/* Content based on active sub-tab */}
-      {subTab === "run" && (
-        <>
-          {/* Compact Input Section */}
-          <div className="run-agent-compact">
-            <div className="run-controls">
-              <input
-                className="agent-input-compact"
-                placeholder="Enter query, command, or parameters..."
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-              />
-              <select 
-                className="agent-selector"
-                value={selectedAgent}
-                onChange={(e) => setSelectedAgent(e.target.value)}
-              >
-                <option value="">Select Agent</option>
-                {agents.map((agent) => (
-                  <option key={agent} value={agent}>
-                    {agent}
-                  </option>
-                ))}
-              </select>
-              <button 
-                onClick={() => runAgent(selectedAgent)}
-                disabled={loading || !selectedAgent}
-                className="run-button"
-              >
-                {loading ? "⏳" : "▶️"} Run
-              </button>
-            </div>
-            
-            {loading && (
-              <div className="loading-compact">
-                <div className="loading-spinner-small"></div>
-                <span>Running {selectedAgent}...</span>
-              </div>
-            )}
-          </div>
-
-          {/* Output Section - Takes full space */}
-          {output && (
-            <div className="output-section-compact">
-              <div className="output-header">
-                <h3>🎯 Output:</h3>
-                <button 
-                  onClick={() => setOutput("")}
-                  className="clear-output-btn"
-                >
-                  🗑️ Clear
-                </button>
-              </div>
-              <pre className="output-content-expanded">{output}</pre>
-            </div>
-          )}
-        </>
-      )}
-
-      {subTab === "build" && <AgentBuilder />}
+    <div className="legacy-notice">
+      <h3>⚠️ Legacy Agent System</h3>
+      <p>This component has been replaced by the new YAML-based agent system.</p>
+      <p>Please use the new Agents interface with Run/Build/Library tabs.</p>
     </div>
   );
 }
