@@ -10,6 +10,7 @@ import { parseAgentYAML, validateAgentConfig, validateToolsExist, type AgentDefi
 import { runTool } from "../../tools/tool-library.ts";
 import { messageBus } from "./message-bus.ts";
 import { executionStore } from "./execution-store.ts";
+import type { Message, MessageHandler } from './message-types.ts';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -54,6 +55,8 @@ export interface ExecutionContext {
 export class AgentRunner {
   private agentsDir: string;
   private context: ExecutionContext | null = null;
+  private messageUnsubscribe: (() => void) | null = null;
+  private pendingMessages: Message[] = [];
 
   constructor(agentsDir?: string) {
     this.agentsDir = agentsDir || path.join(repoRoot, "agents");
@@ -78,6 +81,9 @@ export class AgentRunner {
         startedBy: 'agent-runner'
       });
     }
+
+    // Subscribe agent to messages
+    this.setupMessageHandling(agentId, finalExecutionId);
 
     // Emit agent start event
     messageBus.agentStart(finalExecutionId, agentId, input);
@@ -183,7 +189,65 @@ export class AgentRunner {
           timestamp: new Date().toISOString()
         }
       };
+    } finally {
+      // Clean up message subscription when execution completes
+      this.cleanupMessageHandling();
     }
+  }
+
+  // Message handling setup and cleanup
+  private setupMessageHandling(agentId: string, executionId: string): void {
+    // Subscribe to messages for this agent
+    this.messageUnsubscribe = messageBus.subscribe(agentId, (message: Message) => {
+      console.log(`📨 Agent ${agentId} received message: ${message.type} from ${message.sender}`);
+      this.pendingMessages.push(message);
+      
+      // Log message receipt
+      messageBus.logMessage(executionId, 'info', `Received ${message.type} message from ${message.sender}`, agentId);
+    });
+  }
+
+  private cleanupMessageHandling(): void {
+    if (this.messageUnsubscribe) {
+      this.messageUnsubscribe();
+      this.messageUnsubscribe = null;
+    }
+    this.pendingMessages = [];
+  }
+
+  // Methods for agents to use during execution
+  sendMessage(recipient: string, type: Message['type'], content: any): string {
+    if (!this.context) {
+      throw new Error('Cannot send message: agent not in execution context');
+    }
+    
+    return messageBus.sendMessage({
+      sender: this.context.agentId,
+      recipient,
+      type,
+      content,
+      executionId: this.context.executionId
+    });
+  }
+
+  async sendRequest(recipient: string, content: any, timeout: number = 30000): Promise<Message> {
+    if (!this.context) {
+      throw new Error('Cannot send request: agent not in execution context');
+    }
+
+    return messageBus.sendRequest(
+      this.context.agentId,
+      recipient,
+      content,
+      timeout,
+      this.context.executionId
+    );
+  }
+
+  getMessages(): Message[] {
+    const messages = [...this.pendingMessages];
+    this.pendingMessages = [];
+    return messages;
   }
 
   private validateInput(input: Record<string, any>, schema: Record<string, any>): void {
@@ -212,8 +276,20 @@ export class AgentRunner {
 
   private buildSystemPrompt(agent: AgentDefinition, input: Record<string, any>): string {
     const toolList = agent.tools.map(toolId => `- ${toolId}`).join("\n");
+    const hasTools = agent.tools.length > 0;
     
-    return `${agent.systemPrompt}
+    let prompt = `${agent.systemPrompt}
+
+MESSAGING CAPABILITIES:
+You can communicate with other agents using these functions:
+- sendMessage(recipient, type, content) - Send a message to another agent
+- getMessages() - Get pending messages sent to you
+- sendRequest(recipient, content) - Send a request and wait for response
+
+MESSAGE TYPES: "request", "response", "event", "broadcast"`;
+
+    if (hasTools) {
+      prompt += `
 
 AVAILABLE TOOLS:
 ${toolList}
@@ -229,12 +305,15 @@ DO NOT USE:
 
 EXAMPLES FOR YOUR TOOLS:
 - TOOL_CALL: {"tool": "geocode-place", "params": {"place": "Brisbane"}}  
-- TOOL_CALL: {"tool": "weather", "params": {"latitude": -27.47, "longitude": 153.02}}
+- TOOL_CALL: {"tool": "weather", "params": {"latitude": -27.47, "longitude": 153.02}}`;
+    }
 
-You MUST use your tools to get weather data. Do not suggest alternatives.
+    prompt += `
 
 INPUT CONTEXT:
 ${JSON.stringify(input, null, 2)}`;
+
+    return prompt;
   }
 
   private formatInputMessage(input: Record<string, any>): string {
@@ -305,7 +384,12 @@ ${JSON.stringify(input, null, 2)}`;
     
     let processedResponse = response;
     let hasToolCalls = false;
+    let hasMessageCalls = false;
     
+    // First, handle message function calls: sendMessage(), getMessages(), sendRequest()
+    processedResponse = await this.processMessageCalls(processedResponse, agent);
+    
+    // Then handle tool calls
     // Handle JSON format: TOOL_CALL: {...}
     const jsonToolCallRegex = /TOOL_CALL:\s*\{/g;
     let match;
@@ -673,6 +757,71 @@ ${JSON.stringify(input, null, 2)}`;
       messageBus.agentError(executionId, agentId, error);
       throw error;
     }
+  }
+
+  // Process message function calls in agent response
+  private async processMessageCalls(response: string, agent: AgentDefinition): Promise<string> {
+    let processedResponse = response;
+
+    // Handle getMessages() calls
+    const getMessagesRegex = /getMessages\(\)/g;
+    processedResponse = processedResponse.replace(getMessagesRegex, () => {
+      const messages = this.getMessages();
+      const messagesText = messages.length > 0 
+        ? `[MESSAGES_RECEIVED: ${JSON.stringify(messages, null, 2)}]`
+        : '[NO_MESSAGES]';
+      console.log(`📬 Agent ${agent.id} checked messages: ${messages.length} found`);
+      return messagesText;
+    });
+
+    // Handle sendMessage() calls
+    const sendMessageRegex = /sendMessage\s*\(\s*["']([^"']+)["']\s*,\s*["']([^"']+)["']\s*,\s*([^)]+)\)/g;
+    let sendMatch;
+    while ((sendMatch = sendMessageRegex.exec(response)) !== null) {
+      const [fullMatch, recipient, type, contentStr] = sendMatch;
+      try {
+        let content;
+        // Try to parse content as JSON, otherwise use as string
+        try {
+          content = JSON.parse(contentStr.replace(/'/g, '"'));
+        } catch {
+          content = contentStr.replace(/['"]/g, '');
+        }
+        
+        const messageId = this.sendMessage(recipient, type as Message['type'], content);
+        const resultText = `[MESSAGE_SENT: ${messageId} to ${recipient}]`;
+        processedResponse = processedResponse.replace(fullMatch, resultText);
+        console.log(`📤 Agent ${agent.id} sent ${type} message to ${recipient}`);
+      } catch (error) {
+        console.error(`❌ Error sending message:`, error);
+        processedResponse = processedResponse.replace(fullMatch, `[MESSAGE_ERROR: ${error}]`);
+      }
+    }
+
+    // Handle sendRequest() calls  
+    const sendRequestRegex = /sendRequest\s*\(\s*["']([^"']+)["']\s*,\s*([^)]+)\)/g;
+    let requestMatch;
+    while ((requestMatch = sendRequestRegex.exec(response)) !== null) {
+      const [fullMatch, recipient, contentStr] = requestMatch;
+      try {
+        let content;
+        try {
+          content = JSON.parse(contentStr.replace(/'/g, '"'));
+        } catch {
+          content = contentStr.replace(/['"]/g, '');
+        }
+        
+        const responseMsg = await this.sendRequest(recipient, content, 10000); // 10s timeout
+        const resultText = `[REQUEST_RESPONSE: ${JSON.stringify(responseMsg.content)}]`;
+        processedResponse = processedResponse.replace(fullMatch, resultText);
+        console.log(`📞 Agent ${agent.id} got response from ${recipient}`);
+      } catch (error) {
+        console.error(`❌ Error sending request:`, error);
+        processedResponse = processedResponse.replace(fullMatch, `[REQUEST_ERROR: ${error}]`);
+      }
+    }
+
+    return processedResponse;
   }
 }
 
