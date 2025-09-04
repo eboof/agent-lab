@@ -33,8 +33,12 @@ coverage/
 # Environment / secrets
 .env
 .env.*
+**/secrets/
+server/secrets/
 
-# Database / vector store binaries
+# Database / vector store binaries  
+server/db/
+data/
 server/db/**/*.bin
 server/db/**/*.pickle
 server/db/**/*.sqlite3

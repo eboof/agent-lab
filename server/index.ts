@@ -46,10 +46,17 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import multer from "multer";
 import { spawn, ChildProcess } from "child_process";
+import { WebSocketServer } from 'ws';
+import { createServer } from 'http';
 
 // Tools (new registry system)
 import toolsRouter from "./api/tools.ts";
 import agentsRouter from "./api/agents.ts";
+
+// Orchestration & WebSocket
+import { messageBus } from "./orchestration/message-bus.ts";
+import { executionStore } from "./orchestration/execution-store.ts";
+import googleRouter from "./api/google.ts";
 
 // --- Simple fetch polyfill ---
 async function fetch(url: string, options?: any) {
@@ -121,6 +128,11 @@ app.use("/api/tools", toolsRouter);
 // === Agents API ===
 //
 app.use("/api/agents", agentsRouter);
+
+//
+// === Google API ===
+//
+app.use("/api/google", googleRouter);
 
 //
 // === RAG API ===
@@ -404,14 +416,150 @@ app.get("/health", (req, res) => {
   });
 });
 
-// Mount tools API router
-app.use("/api/tools", toolsRouter);
+// Tools API already mounted above at line 118
+
+
+//
+// --- WebSocket Setup ---
+const httpServer = createServer(app);
+const wss = new WebSocketServer({ server: httpServer });
+
+// Initialize message bus with WebSocket
+messageBus.initializeWebSocket(wss);
+
+// Handle WebSocket connections
+wss.on('connection', (ws, req) => {
+  console.log('📱 New WebSocket connection');
+  
+  // Extract execution ID from URL path
+  const url = req.url || '';
+  const executionIdMatch = url.match(/\/ws\/execution\/([^\/]+)/);
+  
+  if (executionIdMatch) {
+    const executionId = executionIdMatch[1];
+    messageBus.addWebSocketClient(executionId, ws);
+  } else {
+    console.warn('❌ WebSocket connection without valid execution ID');
+    ws.close(1008, 'Invalid execution ID');
+  }
+});
+
+// Add execution API routes
+app.get('/api/executions', (req, res) => {
+  const executions = executionStore.getAllExecutions();
+  res.json(executions);
+});
+
+app.get('/api/executions/:executionId', (req, res) => {
+  const execution = executionStore.getExecution(req.params.executionId);
+  if (!execution) {
+    return res.status(404).json({ error: 'Execution not found' });
+  }
+  res.json(execution);
+});
+
+app.post('/api/executions/:executionId/start', (req, res) => {
+  const { executionId } = req.params;
+  const { metadata } = req.body;
+  
+  try {
+    const execution = executionStore.createExecution(executionId, metadata);
+    res.json({ success: true, execution });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/executions/:executionId/refresh', (req, res) => {
+  const { executionId } = req.params;
+  
+  try {
+    const execution = executionStore.getExecution(executionId);
+    if (!execution) {
+      return res.status(404).json({ error: 'Execution not found' });
+    }
+
+    // Force send current execution state to all connected WebSocket clients
+    messageBus.sendToWebSocketClients(executionId, {
+      type: 'execution:state',
+      data: execution
+    });
+    
+    console.log(`🔄 Manually refreshed execution state for ${executionId}`);
+    res.json({ success: true, execution });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/executions/:executionId/resume', async (req, res) => {
+  const { executionId } = req.params;
+  
+  try {
+    const execution = executionStore.getExecution(executionId);
+    if (!execution) {
+      return res.status(404).json({ error: 'Execution not found' });
+    }
+
+    const agent = execution.agents.find(a => a.status === 'running' && a.awaitingUserData?.userResponse);
+    if (!agent) {
+      return res.status(400).json({ error: 'No agent waiting for continuation' });
+    }
+
+    // Import AgentRunner dynamically to avoid circular dependency
+    const { AgentRunner } = await import('./orchestration/agent-runner.ts');
+    const runner = new AgentRunner();
+    
+    console.log(`🔄 Resuming agent ${agent.agentId} with user decisions`);
+    
+    // Create a continuation prompt with user decisions
+    const userDecisions = agent.awaitingUserData?.userResponse;
+    const continuationPrompt = `Continue processing with user decisions: ${JSON.stringify(userDecisions)}`;
+    
+    // Continue the agent with user input
+    const result = await runner.continueWithUserInput(executionId, agent.agentId, continuationPrompt);
+    
+    res.json({ success: true, result });
+  } catch (error: any) {
+    console.error(`❌ Failed to resume execution ${executionId}:`, error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Clear inactive executions endpoint
+app.delete('/api/executions/clear-inactive', (req, res) => {
+  try {
+    const cleared = executionStore.clearInactiveExecutions();
+    console.log(`🧹 Cleared ${cleared} inactive executions`);
+    res.json({ success: true, cleared });
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 //
 // --- Start ---
-app.listen(PORT, () => {
+const server = httpServer.listen(PORT, () => {
   console.log("===================================");
   console.log(`✅ Server running → http://localhost:${PORT}`);
   console.log(`📂 Agents dir: ${agentsDir}`);
+  console.log(`📡 WebSocket server ready`);
   console.log("===================================");
+});
+
+// Graceful shutdown
+process.on('SIGINT', () => {
+  console.log('\n🛑 Received SIGINT, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGTERM', () => {
+  console.log('\n🛑 Received SIGTERM, shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
 });

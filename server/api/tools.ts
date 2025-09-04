@@ -4,6 +4,7 @@ import * as fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 import { listTools, getToolById } from "../../tools/tool-library.ts";
+import { handleApiError, handleApiSuccess } from "../utils/api-error.ts";
 
 // Fix __dirname for ESM
 const __filename = fileURLToPath(import.meta.url);
@@ -11,9 +12,14 @@ const __dirname = path.dirname(__filename);
 
 const router = express.Router();
 
+// Root endpoint - list all tools
+router.get("/", (req, res) => {
+  handleApiSuccess(res, listTools());
+});
+
 // List tools (with configSchema for Playground)
 router.get("/list", (req, res) => {
-  res.json(listTools());
+  handleApiSuccess(res, listTools());
 });
 
 // Load tool source code for editing
@@ -26,8 +32,11 @@ router.get("/load/:id", async (req, res) => {
       return res.status(404).json({ error: `Tool ${id} not found` });
     }
 
-    // Find the tool file  
-    const toolsDir = path.join(__dirname, "../../../tools/implementations");
+    // Find the tool file (fix path resolution for ESM)
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+    const repoRoot = path.resolve(__dirname, "../..");
+    const toolsDir = path.join(repoRoot, "tools/implementations");
     const fileName = `${id}.ts`;
     const filePath = path.join(toolsDir, fileName);
     
@@ -51,7 +60,7 @@ router.get("/load/:id", async (req, res) => {
     
   } catch (error: any) {
     console.error("Tool load error:", error);
-    res.status(500).json({ error: `Failed to load tool: ${error.message}` });
+    handleApiError(res, error, 500);
   }
 });
 
@@ -76,7 +85,8 @@ router.post("/create", async (req, res) => {
     }
 
     // Create tool file
-    const toolsDir = path.join(__dirname, "../../tools/implementations");
+    const repoRoot = path.resolve(__dirname, "../..");
+    const toolsDir = path.join(repoRoot, "tools/implementations");
     const fileName = `${id}.ts`;
     const filePath = path.join(toolsDir, fileName);
 
@@ -108,7 +118,7 @@ ${code}
 
   } catch (error: any) {
     console.error("Tool creation error:", error);
-    res.status(500).json({ error: `Failed to create tool: ${error.message}` });
+    handleApiError(res, error, 500);
   }
 });
 
@@ -129,7 +139,8 @@ router.put("/update/:id", async (req, res) => {
     }
 
     // Update tool file
-    const toolsDir = path.join(__dirname, "../../tools/implementations");
+    const repoRoot = path.resolve(__dirname, "../..");
+    const toolsDir = path.join(repoRoot, "tools/implementations");
     const fileName = `${id}.ts`;
     const filePath = path.join(toolsDir, fileName);
     
@@ -161,7 +172,7 @@ ${code}
 
   } catch (error: any) {
     console.error("Tool update error:", error);
-    res.status(500).json({ error: `Failed to update tool: ${error.message}` });
+    handleApiError(res, error, 500);
   }
 });
 
@@ -177,7 +188,8 @@ router.delete("/delete/:id", async (req, res) => {
     }
 
     // Delete tool file
-    const toolsDir = path.join(__dirname, "../../tools/implementations");
+    const repoRoot = path.resolve(__dirname, "../..");
+    const toolsDir = path.join(repoRoot, "tools/implementations");
     const fileName = `${id}.ts`;
     const filePath = path.join(toolsDir, fileName);
     
@@ -200,7 +212,7 @@ router.delete("/delete/:id", async (req, res) => {
 
   } catch (error: any) {
     console.error("Tool deletion error:", error);
-    res.status(500).json({ error: `Failed to delete tool: ${error.message}` });
+    handleApiError(res, error, 500);
   }
 });
 
@@ -214,7 +226,7 @@ router.post("/run/:id", async (req, res) => {
     res.json({ tool: req.params.id, result });
   } catch (err: any) {
     console.error(`❌ Tool ${req.params.id} failed:`, err);
-    res.status(400).json({ error: err.message });
+    handleApiError(res, err, 400);
   }
 });
 

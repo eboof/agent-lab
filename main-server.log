@@ -2,11 +2,82 @@
 > agent-server@1.0.0 dev /Users/rob/dev/agent-lab/server
 > ts-node index.ts
 
-(node:43265) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
+(node:79727) ExperimentalWarning: Type Stripping is an experimental feature and might change at any time
 (Use `node --trace-warnings ...` to show where the warning was created)
 ✅ Loaded environment from /Users/rob/dev/agent-lab/.env
+📡 MessageBus WebSocket server initialized
 ===================================
 ✅ Server running → http://localhost:3001
 📂 Agents dir: /Users/rob/dev/agent-lab/agents
+📡 WebSocket server ready
 ===================================
- ELIFECYCLE  Command failed.
+🧹 Cleared 0 inactive executions
+🔔 Event: agent:start (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 No WebSocket clients for execution exec_smart-inbox-v2_1756991276648
+📤 No WebSocket clients for execution exec_smart-inbox-v2_1756991276648
+▶️ Running agent: smart-inbox-v2
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+📱 New WebSocket connection
+📱 Client connected to execution exec_smart-inbox-v2_1756991276648
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+📱 Client disconnected from execution exec_smart-inbox-v2_1756991276648
+📱 New WebSocket connection
+📱 Client connected to execution exec_smart-inbox-v2_1756991276648
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+🔍 Attempting to parse tool call JSON: {"tool": "gmail-get-emails", "params": {"count": 3}}
+🔧 Tool: gmail-get-emails params: { count: 3 }
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📧 Gmail API returned 3 messages (requested 3)
+📧 Successfully processed 3 emails from Gmail API
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+🔄 Continuing conversation (depth 0) with tool results
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+🔔 Event: agent:awaiting_user (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+🔄 Agent smart-inbox-v2 state updated: status=awaiting_user, hasUserResponse=false
+🔔 Event: user:decision (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+✅ User input resolved for agent smart-inbox-v2. Agent should continue execution.
+📤 Sending updated execution state after user input for exec_smart-inbox-v2_1756991276648
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+🔄 Resuming agent smart-inbox-v2 with user decisions
+🔄 Continuing agent smart-inbox-v2 with user input in execution exec_smart-inbox-v2_1756991276648
+📧 Continuing with user decisions: { '1991389f604dc100': 'label:IMPORTANT' }
+🔔 Event: agent:start (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+📧 Running agent with combined input: { count: 3, decisions: { '1991389f604dc100': 'label:IMPORTANT' } }
+🔔 Event: agent:start (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+▶️ Running agent: smart-inbox-v2
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+🔍 Attempting to parse tool call JSON: {"tool": "gmail-get-emails", "params": {"count": 3}}
+🔧 Tool: gmail-get-emails params: { count: 3 }
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📧 Gmail API returned 3 messages (requested 3)
+📧 Successfully processed 3 emails from Gmail API
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+🔍 Attempting to parse tool call JSON: {"tool": "gmail-label-email", "params": {"id": "1991389f604dc100", "label": "IMPORTANT"}}
+🔧 Tool: gmail-label-email params: { id: '1991389f604dc100', label: 'IMPORTANT' }
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+🔔 Event: log (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+🔄 Continuing conversation (depth 0) with tool results
+The model 'claude-3-5-sonnet-20241022' is deprecated and will reach end-of-life on October 22, 2025
+Please migrate to a newer model. Visit https://docs.anthropic.com/en/docs/resources/model-deprecations for more information.
+🔔 Event: agent:done (execution: exec_smart-inbox-v2_1756991276648, agent: smart-inbox-v2)
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:event
+📤 Sending to 1 WebSocket client(s) for execution exec_smart-inbox-v2_1756991276648: execution:state
+✅ Agent smart-inbox-v2 completed with user decisions
+📱 Client disconnected from execution exec_smart-inbox-v2_1756991276648
+🧹 Cleared 1 inactive executions

@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Execution Monitor - Agent Lab</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: #f5f5f5;
+        height: 100vh;
+        overflow: hidden;
+      }
+      
+      #execution-monitor {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+      
+      .loading {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+        font-size: 18px;
+        color: #6b7280;
+      }
+      
+      .error {
+        padding: 20px;
+        text-align: center;
+        color: #dc2626;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="execution-monitor">
+      <div class="loading">
+        <div>🔄 Loading Execution Monitor...</div>
+      </div>
+    </div>
+    
+    <script>
+      // Extract execution ID from URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const pathParts = window.location.pathname.split('/');
+      const executionId = pathParts[pathParts.length - 1] || urlParams.get('executionId');
+      
+      if (!executionId) {
+        document.getElementById('execution-monitor').innerHTML = `
+          <div class="error">
+            <h1>❌ No Execution ID</h1>
+            <p>Please provide a valid execution ID in the URL</p>
+          </div>
+        `;
+      } else {
+        // Set page title
+        document.title = `Execution: ${executionId} - Agent Lab`;
+        
+        // Simple execution monitor implementation
+        let ws = null;
+        let execution = null;
+        
+        function formatTimestamp(timestamp) {
+          return new Date(timestamp).toLocaleTimeString();
+        }
+        
+        function getStatusIcon(status) {
+          switch(status) {
+            case 'running': return '🔄';
+            case 'completed': return '✅';
+            case 'failed': return '❌';
+            case 'paused': return '⏸️';
+            default: return '❓';
+          }
+        }
+        
+        function formatDuration(start, end) {
+          const duration = (end || Date.now()) - start;
+          const seconds = Math.floor(duration / 1000);
+          if (seconds < 60) return seconds + 's';
+          const minutes = Math.floor(seconds / 60);
+          return minutes + 'm ' + (seconds % 60) + 's';
+        }
+        
+        function render() {
+          if (!execution) return;
+          
+          const html = `
+            <div style="background: white; border-bottom: 1px solid #e5e7eb; padding: 20px;">
+              <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                  <h1 style="margin: 0; color: #111827; font-size: 24px;">🔬 Execution Monitor</h1>
+                  <div style="margin-top: 8px; display: flex; gap: 16px; font-size: 14px;">
+                    <span style="color: #6b7280; font-family: Monaco, monospace;">ID: ${execution.executionId}</span>
+                    <span style="background: #f3f4f6; padding: 4px 8px; border-radius: 12px;">
+                      ${getStatusIcon(execution.status)} ${execution.status.toUpperCase()}
+                    </span>
+                    <span style="color: #374151; font-family: Monaco, monospace;">
+                      ${formatDuration(execution.startTime, execution.endTime)}
+                    </span>
+                  </div>
+                </div>
+                <div id="connection-status" style="padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 500;">
+                  🟡 Connecting...
+                </div>
+              </div>
+            </div>
+            
+            <div style="flex: 1; display: flex; overflow: hidden;">
+              <!-- Sidebar -->
+              <div style="width: 250px; background: white; border-right: 1px solid #e5e7eb; padding: 20px; overflow-y: auto;">
+                <h3 style="margin: 0 0 16px 0; color: #374151;">🤖 Agents (${execution.agents.length})</h3>
+                <div>
+                  ${execution.agents.map(agent => `
+                    <div style="padding: 12px; margin-bottom: 8px; border-radius: 8px; border: 1px solid #e5e7eb; background: ${
+                      agent.status === 'running' ? '#dbeafe' : 
+                      agent.status === 'done' ? '#dcfce7' :
+                      agent.status === 'error' ? '#fee2e2' :
+                      agent.status === 'awaiting_user' ? '#fff7ed' : '#f9fafb'
+                    };">
+                      <div style="font-weight: 500; color: #111827; margin-bottom: 4px;">${agent.agentId}</div>
+                      <div style="font-size: 12px; color: #6b7280; text-transform: capitalize;">${agent.status.replace('_', ' ')}</div>
+                    </div>
+                  `).join('')}
+                </div>
+              </div>
+              
+              <!-- Main Content -->
+              <div style="flex: 1; padding: 20px; overflow-y: auto;">
+                ${execution.agents.map(agent => `
+                  <div style="background: white; border: 1px solid #e5e7eb; border-radius: 12px; margin-bottom: 24px; overflow: hidden;">
+                    <div style="background: #f9fafb; padding: 20px; border-bottom: 1px solid #e5e7eb;">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <h2 style="margin: 0; font-size: 20px; color: #111827;">🤖 ${agent.agentId}</h2>
+                        <div style="padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; ${
+                          agent.status === 'running' ? 'background: #dbeafe; color: #1e40af;' :
+                          agent.status === 'done' ? 'background: #dcfce7; color: #166534;' :
+                          agent.status === 'error' ? 'background: #fee2e2; color: #dc2626;' :
+                          agent.status === 'awaiting_user' ? 'background: #fff7ed; color: #c2410c;' : 
+                          'background: #f3f4f6; color: #374151;'
+                        }">
+                          ${getStatusIcon(agent.status)} ${agent.status.replace('_', ' ').toUpperCase()}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    ${agent.status === 'awaiting_user' && agent.awaitingUserData ? `
+                      <div style="background: #fff7ed; padding: 16px; border-bottom: 1px solid #f3f4f6;">
+                        <h4 style="margin: 0 0 8px 0; font-size: 14px;">⏸️ Waiting for User Input</h4>
+                        <div style="font-family: Monaco, monospace; font-size: 14px; background: rgba(0,0,0,0.05); padding: 12px; border-radius: 6px;">
+                          ${agent.awaitingUserData.prompt}
+                        </div>
+                        ${agent.awaitingUserData.data && agent.awaitingUserData.data.emails ? `
+                          <div style="margin-top: 16px;">
+                            <h5>📧 Emails requiring decisions:</h5>
+                            ${agent.awaitingUserData.data.emails.slice(0, 3).map(email => `
+                              <div style="padding: 8px; margin: 4px 0; background: white; border-radius: 4px; font-size: 12px;">
+                                <strong>${email.subject}</strong><br>
+                                <span style="color: #6b7280;">from ${email.from}</span>
+                              </div>
+                            `).join('')}
+                            ${agent.awaitingUserData.data.emails.length > 3 ? `
+                              <div style="color: #6b7280; font-size: 12px; padding: 4px;">
+                                +${agent.awaitingUserData.data.emails.length - 3} more emails...
+                              </div>
+                            ` : ''}
+                            <div style="margin-top: 12px; padding: 8px; background: #f0f9ff; border-radius: 4px; font-size: 12px; color: #0369a1;">
+                              💡 Use the main Agent Lab interface to make decisions and continue execution
+                            </div>
+                          </div>
+                        ` : ''}
+                      </div>
+                    ` : ''}
+                    
+                    <div style="padding: 20px;">
+                      ${agent.input ? `
+                        <div style="margin-bottom: 16px;">
+                          <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">📥 Input</h4>
+                          <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; overflow-x: auto;">
+                            <pre style="margin: 0; font-family: Monaco, monospace; font-size: 12px; color: #374151;">${JSON.stringify(agent.input, null, 2)}</pre>
+                          </div>
+                        </div>
+                      ` : ''}
+                      
+                      ${agent.output ? `
+                        <div style="margin-bottom: 16px;">
+                          <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">📤 Output</h4>
+                          <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 8px; padding: 16px; overflow-x: auto;">
+                            <pre style="margin: 0; font-family: Monaco, monospace; font-size: 12px; color: #374151;">${JSON.stringify(agent.output, null, 2)}</pre>
+                          </div>
+                        </div>
+                      ` : ''}
+                      
+                      ${agent.error ? `
+                        <div style="margin-bottom: 16px;">
+                          <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #dc2626;">❌ Error</h4>
+                          <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 16px;">
+                            <pre style="margin: 0; font-family: Monaco, monospace; font-size: 12px; color: #dc2626;">${agent.error}</pre>
+                          </div>
+                        </div>
+                      ` : ''}
+                      
+                      ${agent.toolCalls && agent.toolCalls.length > 0 ? `
+                        <div>
+                          <h4 style="margin: 0 0 8px 0; font-size: 14px; color: #374151;">🔧 Tool Calls (${agent.toolCalls.length})</h4>
+                          ${agent.toolCalls.map((call, idx) => `
+                            <div style="background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 6px; padding: 12px; margin-bottom: 8px;">
+                              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                                <strong>${call.tool}</strong>
+                                <span style="font-size: 11px; color: #6b7280; font-family: Monaco, monospace;">${formatTimestamp(call.timestamp)}</span>
+                              </div>
+                            </div>
+                          `).join('')}
+                        </div>
+                      ` : ''}
+                    </div>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+            
+            <!-- Logs Panel -->
+            <div style="height: 250px; background: #1a1a1a; color: #e5e5e5; border-top: 1px solid #404040;">
+              <div style="padding: 12px 16px; background: #2a2a2a; border-bottom: 1px solid #404040; display: flex; justify-content: space-between; align-items: center;">
+                <h3 style="margin: 0; font-size: 14px;">📜 Execution Logs</h3>
+                <span style="font-size: 12px; color: #999;">${execution.logs.length} entries</span>
+              </div>
+              <div style="padding: 8px; height: 200px; overflow-y: auto; font-family: Monaco, monospace; font-size: 12px;">
+                ${execution.logs.slice(-100).map(log => `
+                  <div style="display: flex; align-items: flex-start; gap: 8px; padding: 4px 8px; border-radius: 4px; margin-bottom: 2px; ${
+                    log.level === 'error' ? 'background: rgba(239, 68, 68, 0.1);' :
+                    log.level === 'warn' ? 'background: rgba(245, 158, 11, 0.1);' : ''
+                  }">
+                    <span style="color: #999; font-size: 11px; width: 80px; flex-shrink: 0;">${formatTimestamp(log.timestamp)}</span>
+                    <span style="flex-shrink: 0; width: 70px; font-weight: 500; ${
+                      log.level === 'error' ? 'color: #fca5a5;' :
+                      log.level === 'warn' ? 'color: #fbbf24;' :
+                      log.level === 'info' ? 'color: #93c5fd;' : 'color: #9ca3af;'
+                    }">
+                      ${log.level === 'error' ? '❌' : log.level === 'warn' ? '⚠️' : log.level === 'info' ? 'ℹ️' : '🔍'} ${log.level.toUpperCase()}
+                    </span>
+                    ${log.agentId ? `<span style="color: #8b5cf6; font-weight: 500; flex-shrink: 0;">[${log.agentId}]</span>` : ''}
+                    <span style="flex: 1; word-break: break-word;">${log.message}</span>
+                  </div>
+                `).join('')}
+              </div>
+            </div>
+          `;
+          
+          document.getElementById('execution-monitor').innerHTML = html;
+        }
+        
+        function connectWebSocket() {
+          const wsUrl = \`ws://localhost:3001/ws/execution/\${executionId}\`;
+          console.log('Connecting to:', wsUrl);
+          
+          ws = new WebSocket(wsUrl);
+          
+          ws.onopen = () => {
+            console.log('WebSocket connected');
+            document.getElementById('connection-status').innerHTML = '🟢 Connected';
+            document.getElementById('connection-status').style.background = '#dcfce7';
+            document.getElementById('connection-status').style.color = '#166534';
+          };
+          
+          ws.onmessage = (event) => {
+            const message = JSON.parse(event.data);
+            console.log('WebSocket message:', message);
+            
+            if (message.type === 'execution:state') {
+              execution = message.data;
+              render();
+            } else if (message.type === 'execution:event') {
+              // Handle real-time updates
+              if (execution) {
+                const eventData = message.data;
+                if (eventData.type === 'log') {
+                  execution.logs.push({
+                    timestamp: eventData.timestamp,
+                    level: eventData.data?.level || 'info',
+                    message: eventData.data?.message || '',
+                    agentId: eventData.agentId,
+                    data: eventData.data
+                  });
+                  render();
+                }
+              }
+            }
+          };
+          
+          ws.onclose = (event) => {
+            console.log('WebSocket closed:', event.code, event.reason);
+            document.getElementById('connection-status').innerHTML = '🔴 Disconnected';
+            document.getElementById('connection-status').style.background = '#fee2e2';
+            document.getElementById('connection-status').style.color = '#dc2626';
+            
+            // Try to reconnect after delay
+            if (event.code !== 1000) {
+              setTimeout(connectWebSocket, 3000);
+            }
+          };
+          
+          ws.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            document.getElementById('execution-monitor').innerHTML = \`
+              <div class="error">
+                <h1>❌ Connection Error</h1>
+                <p>Failed to connect to execution monitor WebSocket</p>
+                <p>Make sure the Agent Lab server is running on localhost:3001</p>
+                <button onclick="location.reload()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  🔄 Retry
+                </button>
+              </div>
+            \`;
+          };
+        }
+        
+        // Load initial execution state
+        fetch(\`http://localhost:3001/api/executions/\${executionId}\`)
+          .then(res => res.json())
+          .then(data => {
+            execution = data;
+            render();
+            connectWebSocket();
+          })
+          .catch(err => {
+            console.error('Failed to load execution:', err);
+            document.getElementById('execution-monitor').innerHTML = \`
+              <div class="error">
+                <h1>❌ Failed to Load Execution</h1>
+                <p>Could not load execution: \${executionId}</p>
+                <p>Error: \${err.message}</p>
+                <button onclick="location.reload()" style="padding: 8px 16px; background: #3b82f6; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  🔄 Retry
+                </button>
+              </div>
+            \`;
+          });
+      }
+    </script>
+  </body>
+</html>

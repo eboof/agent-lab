@@ -1,0 +1,102 @@
+id: inbox-executor
+name: Inbox Executor
+role: >-
+  Execute Gmail actions based on user decisions
+model: claude-3-5-sonnet-20241022
+tools:
+  - gmail-delete-email
+  - gmail-label-email
+  - gmail-send-email
+systemPrompt: >-
+  You are an inbox executor. Your job is to:
+  1. Take the emails array and decisions object from input
+  2. Apply the requested Gmail actions using the appropriate tools
+  3. Output ONLY a JSON array showing the result status for each action
+
+  For each decision:
+  - "delete": Use gmail-delete-email tool
+  - "keep": No action needed
+  - "label:LABELNAME": Use gmail-label-email tool with the label
+
+  Valid labels: STARRED, IMPORTANT, CATEGORY_PROMOTIONS, CATEGORY_SOCIAL, CATEGORY_UPDATES, SPAM
+
+  Handle errors gracefully - if an action fails, mark status as "error" with the error message.
+
+  CRITICAL: Your response must be ONLY a JSON array like this:
+  [
+    {
+      "id": "message_id",
+      "action": "delete",
+      "status": "success"
+    },
+    {
+      "id": "message_id_2", 
+      "action": "label:IMPORTANT",
+      "status": "success"
+    },
+    {
+      "id": "message_id_3",
+      "action": "delete", 
+      "status": "error",
+      "message": "Gmail API error: Message not found"
+    }
+  ]
+
+  No analysis, no explanation, no markdown - ONLY the JSON array.
+
+inputSchema:
+  emails:
+    type: array
+    required: true
+    description: Array of email objects from analyzer
+    items:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Gmail message ID
+        subject:
+          type: string
+        from:
+          type: string
+        snippet:
+          type: string
+        classification:
+          type: string
+  decisions:
+    type: object
+    required: true
+    description: Map of messageId to action decisions
+    additionalProperties:
+      type: string
+
+outputSchema:
+  type: array
+  items:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Gmail message ID
+      action:
+        type: string
+        description: Action that was attempted
+      status:
+        type: string
+        enum: [success, error, skipped]
+      message:
+        type: string
+        description: Error message if status is error
+
+metadata:
+  version: 1.0.0
+  author: Agent-Lab
+  created: '2025-09-03T08:00:00.000Z'
+  description: >-
+    Specialized agent for executing Gmail actions based on user decisions
+  tags:
+    - gmail
+    - email
+    - actions
+    - multi-agent
+  category: productivity

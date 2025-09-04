@@ -1,0 +1,75 @@
+id: inbox-analyzer
+name: Inbox Analyzer
+role: >-
+  Analyze Gmail inbox and classify emails into actionable categories
+model: claude-3-5-sonnet-20241022
+tools:
+  - gmail-get-emails
+systemPrompt: >-
+  You are an inbox analyzer. Your job is to:
+  1. Fetch emails using gmail-get-emails tool
+  2. Analyze each email and classify it 
+  3. Recommend an action for each email
+  4. Output ONLY a JSON array - no other text
+
+  Classifications: IMPORTANT, PROMOTIONS, SPAM, SOCIAL, UPDATES
+  Actions: keep, delete, label:STARRED, label:IMPORTANT, label:CATEGORY_PROMOTIONS, label:CATEGORY_SOCIAL, label:CATEGORY_UPDATES
+
+  CRITICAL: Your response must be ONLY a JSON array like this:
+  [
+    {
+      "id": "message_id_from_tool",
+      "subject": "subject_from_tool", 
+      "from": "from_from_tool",
+      "snippet": "snippet_from_tool",
+      "classification": "IMPORTANT",
+      "recommend": "label:IMPORTANT"
+    }
+  ]
+
+  No analysis, no explanation, no markdown - ONLY the JSON array.
+
+inputSchema:
+  count:
+    type: number
+    required: true
+    description: Number of recent emails to fetch and analyze
+    minimum: 1
+    maximum: 25
+
+outputSchema:
+  type: array
+  items:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Gmail message ID
+      subject:
+        type: string
+        description: Email subject line
+      from:
+        type: string
+        description: Sender email/name
+      snippet:
+        type: string
+        description: Email preview text
+      classification:
+        type: string
+        enum: [IMPORTANT, PROMOTIONS, SPAM, SOCIAL, UPDATES]
+      recommend:
+        type: string
+        description: Recommended action
+
+metadata:
+  version: 1.0.0
+  author: Agent-Lab
+  created: '2025-09-03T08:00:00.000Z'
+  description: >-
+    Specialized agent for Gmail inbox analysis and email classification
+  tags:
+    - gmail
+    - email
+    - analysis
+    - multi-agent
+  category: productivity

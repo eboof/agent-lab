@@ -56,9 +56,13 @@ export const MyTool: ToolDefinition = {
 
   // Fetch available tools
   useEffect(() => {
-    fetch("http://localhost:3001/api/tools/list")
+    fetch("http://localhost:3001/api/tools")
       .then((res) => res.json())
-      .then((data) => setTools(data))
+      .then((data) => {
+        // Handle new API format - tools are returned as object with indices
+        const toolsArray = Array.isArray(data) ? data : Object.values(data).filter(tool => tool && typeof tool === 'object');
+        setTools(toolsArray);
+      })
       .catch((err) => console.error("Failed to load tools:", err));
   }, []);
 
@@ -123,9 +127,10 @@ export const MyTool: ToolDefinition = {
       if (response.ok) {
         setCreateStatus({ type: 'success', message: `✅ Tool "${newTool.name}" created successfully!` });
         // Refresh tools list
-        const toolsRes = await fetch("http://localhost:3001/api/tools/list");
+        const toolsRes = await fetch("http://localhost:3001/api/tools");
         const toolsData = await toolsRes.json();
-        setTools(toolsData);
+        const toolsArray = Array.isArray(toolsData) ? toolsData : Object.values(toolsData).filter(tool => tool && typeof tool === 'object');
+        setTools(toolsArray);
         // Reset form
         setNewTool({
           id: "",
@@ -148,6 +153,7 @@ export const MyTool: ToolDefinition = {
 
   const loadToolForEditing = async (toolId: string) => {
     setLoading(true);
+    setCreateStatus(null); // Clear any previous error messages
     try {
       const response = await fetch(`http://localhost:3001/api/tools/load/${toolId}`);
       const data = await response.json();
@@ -192,9 +198,10 @@ export const MyTool: ToolDefinition = {
       if (response.ok) {
         setCreateStatus({ type: 'success', message: `✅ Tool "${editingTool.name}" updated successfully!` });
         // Refresh tools list
-        const toolsRes = await fetch("http://localhost:3001/api/tools/list");
+        const toolsRes = await fetch("http://localhost:3001/api/tools");
         const toolsData = await toolsRes.json();
-        setTools(toolsData);
+        const toolsArray = Array.isArray(toolsData) ? toolsData : Object.values(toolsData).filter(tool => tool && typeof tool === 'object');
+        setTools(toolsArray);
       } else {
         setCreateStatus({ type: 'error', message: `❌ Failed to update tool: ${data.error || 'Unknown error'}` });
       }
@@ -266,9 +273,10 @@ export const MyTool: ToolDefinition = {
       if (response.ok) {
         setCreateStatus({ type: 'success', message: `✅ Tool "${newName}" cloned as "${newId}"!` });
         // Refresh tools list
-        const toolsRes = await fetch("http://localhost:3001/api/tools/list");
+        const toolsRes = await fetch("http://localhost:3001/api/tools");
         const toolsData = await toolsRes.json();
-        setTools(toolsData);
+        const toolsArray = Array.isArray(toolsData) ? toolsData : Object.values(toolsData).filter(tool => tool && typeof tool === 'object');
+        setTools(toolsArray);
       } else {
         setCreateStatus({ type: 'error', message: `❌ Failed to clone tool: ${data.error || 'Unknown error'}` });
       }
@@ -325,19 +333,29 @@ export const MyTool: ToolDefinition = {
         {/* Mode Switcher */}
         <div className="mode-switcher">
           <button
-            onClick={() => setMode("test")}
+            onClick={() => {
+              setMode("test");
+              setCreateStatus(null);
+            }}
             className={`mode-btn ${mode === "test" ? "active" : ""}`}
           >
             🧪 Test Tools
           </button>
           <button
-            onClick={() => setMode("create")}
+            onClick={() => {
+              setMode("create");
+              setCreateStatus(null);
+            }}
             className={`mode-btn ${mode === "create" ? "active" : ""}`}
           >
             ⚡ Create Tool
           </button>
           <button
-            onClick={() => setMode("edit")}
+            onClick={() => {
+              setMode("edit");
+              setCreateStatus(null);
+              setEditingTool(null);
+            }}
             className={`mode-btn ${mode === "edit" ? "active" : ""}`}
           >
             ✏️ Edit Tool

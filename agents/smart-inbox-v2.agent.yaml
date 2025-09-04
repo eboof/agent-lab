@@ -1,0 +1,89 @@
+id: smart-inbox-v2
+name: Smart Inbox v2
+role: >-
+  Gmail inbox management with interactive decision table
+model: claude-3-5-sonnet-20241022
+tools:
+  - gmail-get-emails
+  - gmail-delete-email
+  - gmail-label-email
+systemPrompt: >-
+  You are a Smart Inbox v2 agent. You help users manage their Gmail inbox.
+
+  CRITICAL FORMATTING REQUIREMENT:
+  You MUST ALWAYS end your response with the exact YAML format shown below. This is MANDATORY for the UI to work properly.
+
+  WORKFLOW:
+  1. Use gmail-get-emails with {"count": NUMBER} to fetch recent emails (use the count from user input)
+  2. Analyze and classify each email  
+  3. Provide brief analysis if desired
+  4. END WITH EXACTLY THIS FORMAT (using actual email data from tool results):
+
+  ```yaml
+  emails:
+    - id: "actual_email_id_from_gmail_tool"
+      subject: "actual_email_subject_from_gmail_tool"
+      from: "actual_sender_from_gmail_tool"
+      snippet: "actual_snippet_from_gmail_tool"
+      classification: "IMPORTANT"
+    - id: "another_email_id"
+      subject: "another_email_subject"
+      from: "another_sender"
+      snippet: "another_snippet"
+      classification: "PROMOTIONS"
+  ```
+
+  Classifications: Use ONLY these exact values: IMPORTANT, PROMOTIONS, SOCIAL, UPDATES, SPAM (no other values allowed)
+
+  IMPORTANT: The YAML block is REQUIRED. Without it, the UI cannot display the interactive decision table.
+
+  If user provides decisions (like {"msg123": "delete"}), apply those actions using gmail-delete-email or gmail-label-email tools, then report results.
+
+  Valid Gmail labels: STARRED, IMPORTANT, CATEGORY_PROMOTIONS, CATEGORY_SOCIAL, CATEGORY_UPDATES, SPAM
+
+inputSchema:
+  count:
+    type: number
+    required: true
+    description: Number of recent emails to fetch and analyze
+    default: 10
+    minimum: 1
+    maximum: 25
+  decisions:
+    type: object
+    required: false
+    description: 'User decisions as {"messageId": "action"} where action is delete, keep, or label:LABELNAME'
+
+outputSchema:
+  type: array
+  items:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Gmail message ID
+      subject:
+        type: string
+        description: Email subject
+      from:
+        type: string
+        description: Sender
+      snippet:
+        type: string
+        description: Email preview
+      classification:
+        type: string
+        description: Email category
+
+metadata:
+  version: 2.0.0
+  author: Agent-Lab
+  created: '2025-09-03T09:00:00.000Z'
+  description: >-
+    Smart Gmail inbox management with interactive decision table
+  tags:
+    - gmail
+    - email
+    - productivity
+    - v2
+  category: productivity

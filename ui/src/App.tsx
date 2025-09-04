@@ -5,13 +5,27 @@ import { useState, useEffect } from "react";
 import yaml from "js-yaml";
 import "./App.css";
 
+// Simple router check
+function useSimpleRouter() {
+  const [path, setPath] = useState(window.location.pathname);
+  
+  useEffect(() => {
+    const handlePopState = () => setPath(window.location.pathname);
+    window.addEventListener('popstate', handlePopState);
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []);
+  
+  return path;
+}
+
 // Import Tools Playground
 import ToolsPlayground from "./pages/tools/Playground";
 
 // Import new Agent components
-import RunAgents from "./pages/agents/RunAgents";
 import BuildAgent from "./pages/agents/BuildAgent";
 import AgentLibrary from "./pages/agents/AgentLibrary";
+import ExecutionLauncher from "./pages/agents/ExecutionLauncher";
+import ExecutionMonitor from "./pages/execution/ExecutionMonitor";
 
 // Tool Library (simplified version for UI)
 const TOOLS = [
@@ -37,7 +51,17 @@ const CATEGORIES = {
 // ---------------- Root App ----------------
 export default function App() {
   const [tab, setTab] = useState<"agents" | "chat" | "rag" | "tools">("agents");
-  const [agentSubTab, setAgentSubTab] = useState<"run" | "build" | "library">("run");
+  const [agentSubTab, setAgentSubTab] = useState<"build" | "library" | "execution-launcher">("execution-launcher");
+  const currentPath = useSimpleRouter();
+
+  // Check if we're on an execution monitor route
+  console.log('🔍 App.tsx currentPath:', currentPath);
+  const executionMatch = currentPath.match(/^\/execution\/(.+)$/);
+  if (executionMatch) {
+    const executionId = executionMatch[1];
+    console.log('📊 Rendering ExecutionMonitor with ID:', executionId);
+    return <ExecutionMonitor executionId={executionId} />;
+  }
 
   return (
     <div className="app-container">
@@ -94,11 +118,32 @@ export default function App() {
 
 // ---------------- New Agents UI (Phase 1) ----------------
 interface NewAgentsUIProps {
-  agentSubTab: "run" | "build" | "library";
-  setAgentSubTab: (tab: "run" | "build" | "library") => void;
+  agentSubTab: "build" | "library" | "execution-launcher";
+  setAgentSubTab: (tab: "build" | "library" | "execution-launcher") => void;
 }
 
 function NewAgentsUI({ agentSubTab, setAgentSubTab }: NewAgentsUIProps) {
+  // Listen for hash changes to update active tab
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash;
+      if (hash.includes('#/agents/build')) {
+        setAgentSubTab('build');
+      } else if (hash.includes('#/agents/run')) {
+        setAgentSubTab('run');
+      } else if (hash.includes('#/agents/library')) {
+        setAgentSubTab('library');
+      }
+    };
+
+    // Check initial hash
+    handleHashChange();
+    
+    // Listen for changes
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [setAgentSubTab]);
+
   return (
     <div className="agents-ui">
       <div className="section-header">
@@ -106,10 +151,10 @@ function NewAgentsUI({ agentSubTab, setAgentSubTab }: NewAgentsUIProps) {
         
         <div className="agent-sub-tabs">
           <button
-            onClick={() => setAgentSubTab("run")}
-            className={`sub-tab ${agentSubTab === "run" ? "active" : ""}`}
+            onClick={() => setAgentSubTab("execution-launcher")}
+            className={`sub-tab ${agentSubTab === "execution-launcher" ? "active" : ""}`}
           >
-            ▶️ Run Agents
+            🚀 Execution Monitor
           </button>
           <button
             onClick={() => setAgentSubTab("build")}
@@ -127,7 +172,7 @@ function NewAgentsUI({ agentSubTab, setAgentSubTab }: NewAgentsUIProps) {
       </div>
 
       {/* Content based on active sub-tab */}
-      {agentSubTab === "run" && <RunAgents />}
+      {agentSubTab === "execution-launcher" && <ExecutionLauncher />}
       {agentSubTab === "build" && <BuildAgent />}
       {agentSubTab === "library" && <AgentLibrary />}
     </div>

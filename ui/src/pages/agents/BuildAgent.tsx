@@ -47,15 +47,42 @@ const BuildAgent: React.FC = () => {
 
   useEffect(() => {
     fetchTools();
+    
+    // Check if we're editing an existing agent
+    const urlParams = new URLSearchParams(window.location.hash.split('?')[1] || '');
+    const editAgentId = urlParams.get('edit');
+    if (editAgentId) {
+      loadAgentForEditing(editAgentId);
+    }
   }, []);
 
   const fetchTools = async () => {
     try {
-      const response = await fetch('http://localhost:3001/api/tools/list');
+      const response = await fetch('http://localhost:3001/api/tools');
       const data = await response.json();
-      setAvailableTools(data);
+      // Handle new API format - tools are returned as object with indices
+      const toolsArray = Array.isArray(data) ? data : Object.values(data).filter(tool => tool && typeof tool === 'object');
+      setAvailableTools(toolsArray);
     } catch (err) {
       console.error('Failed to load tools:', err);
+    }
+  };
+
+  const loadAgentForEditing = async (agentId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3001/api/agents/load/${agentId}`);
+      if (!response.ok) {
+        throw new Error(`Failed to load agent: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      const yaml = await import('js-yaml');
+      const config = yaml.load(data.content) as AgentConfig;
+      
+      setAgentConfig(config);
+    } catch (err: any) {
+      console.error('Failed to load agent for editing:', err);
+      // Could show an error message to user
     }
   };
 
